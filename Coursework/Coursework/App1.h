@@ -3,8 +3,10 @@
 #define _APP1_H
 
 // Includes
-#include "../DXFramework/DXF.h"
-
+#include "DXF.h"	// include dxframework
+#include "TessellationShader.h"
+#include "TessellatedPlane.h"
+#include "LightShader.h"
 
 class App1 : public BaseApplication
 {
@@ -21,7 +23,12 @@ protected:
 	void gui();
 
 private:
-
+	TessellatedPlane* mesh;
+	TessellationShader* tessshader;
+	LightShader* lightshader;
+	Light* light;
+	Light* light1;
+	float elapsedtime;
 };
 
 #endif
