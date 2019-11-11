@@ -3,7 +3,7 @@
 
 TessellationShader::TessellationShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
-	initShader(L"Tesselation_vs.cso", L"Tessellation_hs.cso", L"Tessellation_ds.cso", L"Tessellation_ps.cso");
+	initShader(L"Tesselation_vs.cso", L"Tessellation_hs.cso", L"Tessellation_ds.cso", L"light_ps.cso");
 }
 
 
@@ -33,6 +33,7 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 {
 	D3D11_BUFFER_DESC factorBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
+	D3D11_BUFFER_DESC lightBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -69,6 +70,17 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	renderer->CreateSamplerState(&samplerDesc, &sampleState);
 
+	// Setup light buffer
+// Setup the description of the light dynamic constant buffer that is in the pixel shader.
+// Note that ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail.
+	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
+	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightBufferDesc.MiscFlags = 0;
+	lightBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
+
 }
 
 void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hsFilename, const wchar_t* dsFilename, const wchar_t* psFilename)
@@ -82,7 +94,7 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hs
 }
 
 
-void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2)
+void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, Light* light, Light* light1)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -109,6 +121,24 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->Unmap(factorBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &factorBuffer);
 	deviceContext->DSSetConstantBuffers(1, 1, &factorBuffer);
+
+	//Additional
+// Send light data to pixel shader
+	LightBufferType* lightPtr;
+	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	lightPtr = (LightBufferType*)mappedResource.pData;
+	lightPtr->ambient[0] = light->getAmbientColour();
+	lightPtr->ambient[1] = light1->getAmbientColour();
+	lightPtr->diffuse[0] = light->getDiffuseColour();
+	lightPtr->diffuse[1] = light1->getDiffuseColour();
+	lightPtr->direction[0] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0.0f);
+	lightPtr->direction[1] = XMFLOAT4(light1->getDirection().x, light1->getDirection().y, light1->getDirection().z, 0.0f);
+	lightPtr->specColour = light->getSpecularColour();
+	lightPtr->position[0] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0.0);
+	lightPtr->position[1] = XMFLOAT4(light1->getPosition().x, light1->getPosition().y, light1->getPosition().z, 0.0);
+	lightPtr->power = XMFLOAT4(light->getSpecularPower(), 0.0f, 0.0f, 0.0f);
+	deviceContext->Unmap(lightBuffer, 0);
+	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
 	deviceContext->DSSetShaderResources(0, 1, &texture);
 	deviceContext->DSSetSamplers(0, 1, &sampleState);
