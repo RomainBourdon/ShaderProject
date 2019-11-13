@@ -1,6 +1,18 @@
 // Tessellation vertex shader.
 // Doesn't do much, could manipulate the control points
 // Pass forward data, strip out some values not required for example.
+cbuffer MatrixBuffer : register(b0)
+{
+	matrix worldMatrix;
+	matrix viewMatrix;
+	matrix projectionMatrix;
+};
+
+cbuffer factorBuffer: register(b1)
+{
+	float3 Camera;
+	float time;
+};
 
 struct InputType
 {

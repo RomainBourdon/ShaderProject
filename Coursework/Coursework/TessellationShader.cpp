@@ -3,7 +3,7 @@
 
 TessellationShader::TessellationShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
-	initShader(L"Tesselation_vs.cso", L"Tessellation_hs.cso", L"Tessellation_ds.cso", L"light_ps.cso");
+	initShader(L"Tesselation_vs.cso", L"Tessellation_hs.cso", L"Tessellation_ds.cso", L"Tessellation_ps.cso");
 }
 
 
@@ -94,7 +94,7 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hs
 }
 
 
-void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, Light* light, Light* light1)
+void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, Light* light)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -112,6 +112,7 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr->projection = tproj;
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
+	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
 	const_edgesBufferType* facPtr;
 	deviceContext->Map(factorBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -121,23 +122,17 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->Unmap(factorBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &factorBuffer);
 	deviceContext->DSSetConstantBuffers(1, 1, &factorBuffer);
+	deviceContext->VSSetConstantBuffers(1, 1, &factorBuffer);
 
 	//Additional
 // Send light data to pixel shader
 	LightBufferType* lightPtr;
 	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	lightPtr = (LightBufferType*)mappedResource.pData;
-	lightPtr->ambient[0] = light->getAmbientColour();
-	lightPtr->ambient[1] = light1->getAmbientColour();
-	lightPtr->diffuse[0] = light->getDiffuseColour();
-	lightPtr->diffuse[1] = light1->getDiffuseColour();
-	lightPtr->direction[0] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0.0f);
-	lightPtr->direction[1] = XMFLOAT4(light1->getDirection().x, light1->getDirection().y, light1->getDirection().z, 0.0f);
-	lightPtr->specColour = light->getSpecularColour();
-	lightPtr->position[0] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0.0);
-	lightPtr->position[1] = XMFLOAT4(light1->getPosition().x, light1->getPosition().y, light1->getPosition().z, 0.0);
-	lightPtr->power = XMFLOAT4(light->getSpecularPower(), 0.0f, 0.0f, 0.0f);
-	deviceContext->Unmap(lightBuffer, 0);
+	lightPtr->ambient = light->getAmbientColour();
+	lightPtr->diffuse = light->getDiffuseColour();
+	lightPtr->direction = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0.0f);
+	lightPtr->position = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0.0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
 	deviceContext->DSSetShaderResources(0, 1, &texture);

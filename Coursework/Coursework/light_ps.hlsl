@@ -63,7 +63,7 @@ float4 main(InputType input) : SV_TARGET
 	}
 
 
-	return ((lightColour[0] + lightColour[1]) * textureColour);// + finalspec;
+	return ((lightColour[0] + lightColour[1]));// *textureColour);// + finalspec;
 }
 
 

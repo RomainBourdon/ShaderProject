@@ -24,10 +24,12 @@ protected:
 
 private:
 	TessellatedPlane* mesh;
+	SphereMesh* firefly[3];
 	TessellationShader* tessshader;
 	LightShader* lightshader;
 	Light* light;
 	Light* light1;
+	Light* worldLight;
 	float elapsedtime;
 };
 

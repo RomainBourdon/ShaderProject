@@ -81,7 +81,7 @@ OutputType main(InputPatch<InputType, 4> patch, uint pointId : SV_OutputControlP
 	// Set the input colour as the output colour.
 	output.colour = patch[pointId].colour;
 
-
+	
 
 	return output;
 }
