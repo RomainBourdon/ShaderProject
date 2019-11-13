@@ -13,35 +13,24 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
 	// Initalise scene variables.
-	mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext());
-	tessshader = new TessellationShader(renderer->getDevice(), hwnd);
-
-	for (int i = 0; i < 3; i++)
-	{
-		firefly[i] = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext());
-		//XMMatrixScaling(0.5, 0.5, 0.5);
-	}
-
+	
 	textureMgr->loadTexture(L"brick", L"res/height.png");
 	textureMgr->loadTexture(L"Mountain", L"res/TexturesCom_RockGrassy0019_M.jpg");
 
+	mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext());
+	tessshader = new TessellationShader(renderer->getDevice(), hwnd);
 	lightshader = new LightShader(renderer->getDevice(), hwnd);
 
-	light = new Light;
-	light->setAmbientColour(0.2f, 0.2f, 0.2f, 1.0f);
-	light->setDiffuseColour(1.0f, 0.0f, 0.0f, 1.0f);
-	light->setDirection(0.0f, -1.0f, 0.0f);
-	light->setPosition(45.0f, 20.0f, 50.0f);
-	light->setSpecularColour(1.0f, 1.0f, 1.0f, 1.0f);
-	light->setSpecularPower(50.0f);
-
-	light1 = new Light;
-	light1->setAmbientColour(0.2f, 0.2f, 0.2f, 1.0f);
-	light1->setDiffuseColour(0.0f, 1.0f, 0.0f, 1.0f);
-	light1->setDirection(0.0f, -1.0f, 0.0f);
-	light1->setPosition(55.0f, 20.0f, 50.0f);
-	light1->setSpecularColour(1.0f, 1.0f, 1.0f, 1.0f);
-	light1->setSpecularPower(50.0f);
+	firefly = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext());
+	for (int i = 0; i < 3; i++)
+	{
+		
+		fireflylight[i] = new Light;
+		fireflylight[i]->setAmbientColour(0.2f, 0.2f, 0.2f, 1.0f);
+		fireflylight[i]->setDiffuseColour(1.0f, 0.0f, 0.0f, 1.0f);
+		fireflylight[i]->setPosition(45.0f + (2 * i), 20.0f, 50.0f);
+		//XMMatrixScaling(0.5, 0.5, 0.5);
+	}
 
 	worldLight = new Light;
 	worldLight->setAmbientColour(0.2f, 0.2f, 0.2f, 1.0f);
@@ -101,6 +90,10 @@ bool App1::render()
 	mesh->sendData(renderer->getDeviceContext());
 	tessshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, elapsedtime, camera->getPosition(), textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"Mountain"), worldLight);
 	tessshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+
+	firefly->sendData(renderer->getDeviceContext());
+	lightshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2]);
+	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	// Render GUI
 	gui();

@@ -40,7 +40,7 @@ ConstantOutputType PatchConstantFunction(InputPatch<InputType, 4> inputPatch, ui
 
 	float3 cameradist = float3(Camera.x - averageMidpoint.x, Camera.y - averageMidpoint.y, Camera.z - averageMidpoint.z);
 
-	tessFact = MaxTess - (length(cameradist) * 3);
+	tessFact = MaxTess - (length(cameradist) * 2);
 
 	if (tessFact < 1)
 	{

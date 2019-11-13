@@ -45,7 +45,6 @@ void LightShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
-	D3D11_BUFFER_DESC cameraBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -82,25 +81,16 @@ void LightShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	lightBufferDesc.MiscFlags = 0;
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
-
-	cameraBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cameraBufferDesc.ByteWidth = sizeof(CameraBufferType);
-	cameraBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cameraBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cameraBufferDesc.MiscFlags = 0;
-	cameraBufferDesc.StructureByteStride = 0;
-	renderer->CreateBuffer(&cameraBufferDesc, NULL, &cameraBuffer);
 }
 
 
-void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, Light* light, Camera* camera, Light* light1)
+void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, Light* light, Light* light1, Light* light2)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
 
 	XMMATRIX tworld, tview, tproj;
-
 
 	// Transpose the matrices to prepare them for the shader.
 	tworld = XMMatrixTranspose(worldMatrix);
@@ -121,24 +111,15 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	lightPtr = (LightBufferType*)mappedResource.pData;
 	lightPtr->ambient[0] = light->getAmbientColour();
 	lightPtr->ambient[1] = light1->getAmbientColour();
+	lightPtr->ambient[2] = light2->getAmbientColour();
 	lightPtr->diffuse[0] = light->getDiffuseColour();
 	lightPtr->diffuse[1] = light1->getDiffuseColour();
-	lightPtr->direction[0] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0.0f);
-	lightPtr->direction[1] = XMFLOAT4(light1->getDirection().x, light1->getDirection().y, light1->getDirection().z, 0.0f);
-	lightPtr->specColour = light->getSpecularColour();
+	lightPtr->diffuse[2] = light2->getDiffuseColour();
 	lightPtr->position[0] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0.0);
 	lightPtr->position[1] = XMFLOAT4(light1->getPosition().x, light1->getPosition().y, light1->getPosition().z, 0.0);
-	lightPtr->power = XMFLOAT4(light->getSpecularPower(), 0.0f, 0.0f, 0.0f);
+	lightPtr->position[2] = XMFLOAT4(light2->getPosition().x, light2->getPosition().y, light2->getPosition().z, 0.0);
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
-
-	CameraBufferType* CameraPtr;
-	deviceContext->Map(cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	CameraPtr = (CameraBufferType*)mappedResource.pData;
-	CameraPtr->cameraPosition = camera->getPosition();
-	CameraPtr->padding = 0.0f;
-	deviceContext->Unmap(cameraBuffer, 0);
-	deviceContext->VSSetConstantBuffers(1, 1, &cameraBuffer);
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);

@@ -6,12 +6,10 @@ SamplerState sampler0 : register(s0);
 
 cbuffer LightBuffer : register(b0)
 {
-	float4 ambient[2];
-	float4 diffuse[2];
-	float4 direction[2];
-	float4 specColour;
-	float4 position[2];
-	float4 power;
+	float4 ambient[3];
+	float4 diffuse[3];
+	float4 position[3];
+
 };
 
 struct InputType
@@ -31,28 +29,19 @@ float4 calculateLighting(float3 lightDirection, float3 normal, float4 ldiffuse) 
 	return colour;
 }
 
-float4 calcSpecular(float3 lightDirection, float3 normal, float3 viewVector, float4 specularColour, float specularPower)
-{
-	float3 halfway = normalize(lightDirection + viewVector);
-	float SpecularIntensity = pow(max(dot(normal, halfway), 0.0), specularPower);
-	return saturate(specularColour * SpecularIntensity);
-
-}
-
 float4 main(InputType input) : SV_TARGET
 {
 	// Sample the texture. Calculate light intensity and colour, return light*texture for final pixel colour.
 	float4 textureColour = texture0.Sample(sampler0, input.tex);
 	float consFactor = 1.0f, linear_factor = 0.125f, quadratic = 0.0f;
-	//float4 finalspec;
-	float3 lightVector[2];
-	//float distance[2];
-	float4 lightColour[2];
-	//float attenuation[2];
+	float3 lightVector[3];
+	//float distance[3];
+	float4 lightColour[3];
+	//float attenuation[3];
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		//finalspec = calcSpecular(direction[i], input.normal, input.worldPosition, specColour, power);
+		
 		lightVector[i] = normalize(position[i] - input.worldPosition);
 		/*
 		distance[i] = length(lightVector[i]);
@@ -63,7 +52,7 @@ float4 main(InputType input) : SV_TARGET
 	}
 
 
-	return ((lightColour[0] + lightColour[1]));// *textureColour);// + finalspec;
+	return ((lightColour[0] + lightColour[1] + lightColour[2]));// *textureColour);
 }
 
 

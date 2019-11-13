@@ -39,6 +39,48 @@ struct OutputType
 	float4 colour : COLOR;
 };
 
+float SampleHeightMap(float2 uv)
+{
+	const float SCALE = 3.0f;
+	return SCALE * texture0.SampleLevel(sampler0, uv, 0.0f).r;
+}
+
+float3 Sobel(float2 tc)
+{
+	float HeightMapDimensionsX, HeightMapDimensionsY;
+	texture0.GetDimensions(HeightMapDimensionsX, HeightMapDimensionsY);
+	float2 pxSz = float2(1.0f / HeightMapDimensionsX, 1.0f / HeightMapDimensionsY);
+
+	float2 ooo = tc + float2(-pxSz.x, -pxSz.y);
+	float2 o1o = tc + float2(0.0f, -pxSz.y);
+	float2 o2o = tc + float2(pxSz.x, -pxSz.y);
+
+	float2 o01 = tc + float2(-pxSz.x, 0.0f);
+	float2 o21 = tc + float2(pxSz.x, 0.0f);
+
+	float2 o02 = tc + float2(-pxSz.x, pxSz.y);
+	float2 o12 = tc + float2(0.0f, pxSz.y);
+	float2 o22 = tc + float2(pxSz.x, pxSz.y);
+
+	float h00 = SampleHeightMap(ooo);
+	float h10 = SampleHeightMap(o1o);
+	float h20 = SampleHeightMap(o2o);
+
+	float h01 = SampleHeightMap(o01);
+	float h21 = SampleHeightMap(o21);
+
+	float h02 = SampleHeightMap(o02);
+	float h12 = SampleHeightMap(o12);
+	float h22 = SampleHeightMap(o22);
+
+	float Gx = h00 - h20 + 2.0f * h01 - 2.0f * h21 + h02 - h22;
+	float Gy = h00 + 2.0f * h10 + h20 - h02 - 2.0f * h12 - h22;
+
+	float Gz = 0.5f * sqrt(max(0.1f, 1.0f - Gx * Gx - Gy * Gy));
+
+	return normalize(float3(2.0f * Gx, Gz, 2.0f * Gy));
+}
+
 [domain("quad")]
 OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, const OutputPatch<InputType, 4> patch)
 {
@@ -59,9 +101,14 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	float2 uv2 = lerp(patch[3].tex, patch[2].tex, uvwCoord.y);
 	UV = lerp(uv1, uv2, uvwCoord.x);
 
-	float3 normal1 = lerp(patch[0].normal, patch[1].normal, uvwCoord.y);
+	/*float3 normal1 = lerp(patch[0].normal, patch[1].normal, uvwCoord.y);
 	float3 normal2 = lerp(patch[3].normal, patch[2].normal, uvwCoord.y);
-	Normal = lerp(normal1, normal2, uvwCoord.x);
+	Normal = lerp(normal1, normal2, uvwCoord.x);*/
+
+	output.normal = Sobel(UV);
+	output.normal = mul(output.normal, (float3x3)worldMatrix);
+	output.normal = normalize(output.normal);
+
 
 	float h = texture0.SampleLevel(sampler0, UV, 0).r;
 	vertexPosition.y += (15.0f * h);// *float3(Normal);
@@ -76,7 +123,7 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	// Send the input color into the pixel shader.
 	output.colour = patch[0].colour;
 
-	output.normal = Normal;
+	//output.normal = Normal;
 	output.tex = UV;
 
 	return output;
