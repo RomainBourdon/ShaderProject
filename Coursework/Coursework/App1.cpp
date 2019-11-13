@@ -26,16 +26,19 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	{
 		
 		fireflylight[i] = new Light;
-		fireflylight[i]->setAmbientColour(0.2f, 0.2f, 0.2f, 1.0f);
-		fireflylight[i]->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
-		fireflylight[i]->setPosition(45.0f + (2 * i), 5.0f, 10.0f);
-		
+		fireflylight[i]->setAmbientColour(0.05f, 0.05f, 0.05f, 1.0f);
+		fireflylight[i]->setDiffuseColour(0.678f, 1.0f, 0.184f, 1.0f);
+		fireflylight[i]->setDirection(0.0f, -1.0f, 0.0f);
 	}
 
+	fireflylight[0]->setPosition(45.0f, 2.0f, 10.0f);
+	fireflylight[1]->setPosition(47.0f, 2.0f, 13.0f);
+	fireflylight[2]->setPosition(49.0f, 2.0f, 10.0f);
+
 	worldLight = new Light;
-	worldLight->setAmbientColour(0.2f, 0.2f, 0.2f, 1.0f);
+	worldLight->setAmbientColour(0.05f, 0.05f, 0.05f, 1.0f);
 	worldLight->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
-	worldLight->setDirection(0.7f, -0.7f, 0.0f);
+	worldLight->setDirection(-0.7f, -0.7f, 0.0f);
 	worldLight->setPosition(-100.0f, 100.0f, 100.0f);
 }
 
@@ -88,22 +91,22 @@ bool App1::render()
 
 	// Send geometry data, set shader parameters, render object with shader
 	mesh->sendData(renderer->getDeviceContext());
-	tessshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, elapsedtime, camera->getPosition(), textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"Mountain"), worldLight);
+	tessshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, elapsedtime, camera->getPosition(), textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"Mountain"), worldLight, fireflylight[0], fireflylight[1], fireflylight[2]);
 	tessshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
-	worldMatrix = renderer->getWorldMatrix() + XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
+	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
 	firefly->sendData(renderer->getDeviceContext());
-	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2]);
+	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
 	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
-	worldMatrix = renderer->getWorldMatrix() + XMMatrixTranslation(fireflylight[1]->getPosition().x, fireflylight[1]->getPosition().y, fireflylight[1]->getPosition().z);
+	worldMatrix = XMMatrixTranslation(fireflylight[1]->getPosition().x, fireflylight[1]->getPosition().y, fireflylight[1]->getPosition().z);
 	firefly->sendData(renderer->getDeviceContext());
-	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2]);
+	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
 	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
-	worldMatrix = renderer->getWorldMatrix() + XMMatrixTranslation(fireflylight[2]->getPosition().x, fireflylight[2]->getPosition().y, fireflylight[2]->getPosition().z);
+	worldMatrix = XMMatrixTranslation(fireflylight[2]->getPosition().x, fireflylight[2]->getPosition().y, fireflylight[2]->getPosition().z);
 	firefly->sendData(renderer->getDeviceContext());
-	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05)* worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2]);
+	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05)* worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
 	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	// Render GUI

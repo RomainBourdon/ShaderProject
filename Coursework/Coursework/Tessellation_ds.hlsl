@@ -28,6 +28,7 @@ struct InputType
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
 	float4 colour : COLOR;
+	float3 worldPosition : TEXCOORD1;
 
 };
 
@@ -37,6 +38,7 @@ struct OutputType
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
 	float4 colour : COLOR;
+	float3 worldPosition : TEXCOORD1;
 };
 
 float SampleHeightMap(float2 uv)
@@ -84,7 +86,7 @@ float3 Sobel(float2 tc)
 [domain("quad")]
 OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, const OutputPatch<InputType, 4> patch)
 {
-	float3 vertexPosition, Normal;
+	float3 vertexPosition;
 	float2 UV;
 	OutputType output;
 
@@ -101,9 +103,9 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	float2 uv2 = lerp(patch[3].tex, patch[2].tex, uvwCoord.y);
 	UV = lerp(uv1, uv2, uvwCoord.x);
 
-	/*float3 normal1 = lerp(patch[0].normal, patch[1].normal, uvwCoord.y);
-	float3 normal2 = lerp(patch[3].normal, patch[2].normal, uvwCoord.y);
-	Normal = lerp(normal1, normal2, uvwCoord.x);*/
+	float3 wp1 = lerp(patch[0].worldPosition, patch[1].worldPosition, uvwCoord.y);
+	float3 wp2 = lerp(patch[3].worldPosition, patch[2].worldPosition, uvwCoord.y);
+	output.worldPosition = lerp(wp1, wp2, uvwCoord.x);
 
 	output.normal = Sobel(UV);
 	output.normal = mul(output.normal, (float3x3)worldMatrix);
@@ -113,7 +115,6 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	float h = texture0.SampleLevel(sampler0, UV, 0).r;
 	vertexPosition.y += (15.0f * h);// *float3(Normal);
 
-	//vertexPosition.y = sin((vertexPosition.x * 1) + (time * 2)) * 2;
 
 	// Calculate the position of the new vertex against the world, view, and projection matrices.
 	output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);

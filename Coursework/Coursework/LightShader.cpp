@@ -45,6 +45,7 @@ void LightShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
+	D3D11_BUFFER_DESC TimeBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -81,10 +82,18 @@ void LightShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	lightBufferDesc.MiscFlags = 0;
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
+
+	TimeBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	TimeBufferDesc.ByteWidth = sizeof(TimeBufferType);
+	TimeBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	TimeBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	TimeBufferDesc.MiscFlags = 0;
+	TimeBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&TimeBufferDesc, NULL, &TimeBuffer);
 }
 
 
-void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, Light* light, Light* light1, Light* light2)
+void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, Light* light, Light* light1, Light* light2, float time)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -120,6 +129,14 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	lightPtr->position[2] = XMFLOAT4(light2->getPosition().x, light2->getPosition().y, light2->getPosition().z, 0.0);
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
+
+	TimeBufferType* timePtr;
+	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	timePtr = (TimeBufferType*)mappedResource.pData;
+	timePtr->time = time;
+	timePtr->padding = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	deviceContext->Unmap(TimeBuffer, 0);
+	deviceContext->VSSetConstantBuffers(1, 1, &TimeBuffer);
 
 	// Set shader texture resource in the pixel shader.
 	deviceContext->PSSetShaderResources(0, 1, &texture);

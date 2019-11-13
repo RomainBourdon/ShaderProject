@@ -19,10 +19,10 @@ private:
 	};
 	struct LightBufferType
 	{
-		XMFLOAT4 ambient;
-		XMFLOAT4 diffuse;
-		XMFLOAT4 direction;
-		XMFLOAT4 position;
+		XMFLOAT4 ambient[4];
+		XMFLOAT4 diffuse[4];
+		XMFLOAT4 direction[4];
+		XMFLOAT4 position[3];
 	};
 
 public:
@@ -30,7 +30,7 @@ public:
 	TessellationShader(ID3D11Device* device, HWND hwnd);
 	~TessellationShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, Light* light);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, Light* light, Light* light1, Light* light2, Light* light3);
 
 private:
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);

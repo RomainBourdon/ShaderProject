@@ -13,14 +13,18 @@ private:
 		XMFLOAT4 ambient[3];
 		XMFLOAT4 diffuse[3];
 		XMFLOAT4 position[3];
-		
+	};
+	struct TimeBufferType
+	{
+		float time;
+		XMFLOAT3 padding;
 	};
 
 public:
 	LightShader(ID3D11Device* device, HWND hwnd);
 	~LightShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture, Light* light, Light* light1, Light* light2);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture, Light* light, Light* light1, Light* light2, float time);
 
 private:
 	void initShader(const wchar_t* vs, const wchar_t* ps);
@@ -29,6 +33,7 @@ private:
 	ID3D11Buffer* matrixBuffer;
 	ID3D11SamplerState* sampleState;
 	ID3D11Buffer* lightBuffer;
+	ID3D11Buffer* TimeBuffer;
 };
 
 

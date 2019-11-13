@@ -17,8 +17,8 @@ struct InputType
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float3 viewVector : TEXCOORD1;
-	float3 worldPosition : TEXCOORD2;
+	float3 worldPosition : TEXCOORD1;
+	float4 colour : COLOR;
 };
 
 // Calculate lighting intensity based on direction and normal. Combine with light colour.
@@ -52,7 +52,7 @@ float4 main(InputType input) : SV_TARGET
 	}
 
 
-	return ((lightColour[0] + lightColour[1] + lightColour[2]));// *textureColour);
+	return input.colour;// ((lightColour[0] + lightColour[1] + lightColour[2]));// *textureColour);
 }
 
 

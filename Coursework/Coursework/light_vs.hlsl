@@ -7,12 +7,11 @@ cbuffer MatrixBuffer : register(b0)
 	matrix projectionMatrix;
 };
 
-cbuffer CameraBuffer : register(b1)
+cbuffer TimeBuffer : register(b1)
 {
-	float3 cameraPosition;
-	float padding;
+	float time;
+	float3 padding2;
 };
-
 struct InputType
 {
 	float4 position : POSITION;
@@ -25,8 +24,8 @@ struct OutputType
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float3 viewVector : TEXCOORD1;
-	float3 worldPosition : TEXCOORD2;
+	float3 worldPosition : TEXCOORD1;
+	float4 colour : COLOR;
 };
 
 OutputType main(InputType input)
@@ -34,6 +33,7 @@ OutputType main(InputType input)
 	OutputType output;
 
 
+	input.position.y = sin((input.position.x * 1) + (time * 2)) * 2;
 
 	// Calculate the position of the vertex against the world, view, and projection matrices.
 	output.position = mul(input.position, worldMatrix);
@@ -49,8 +49,8 @@ OutputType main(InputType input)
 
 	float4 worldPosition = mul(input.position, worldMatrix);
 	output.worldPosition = worldPosition;
-	output.viewVector = cameraPosition.xyz - worldPosition.xyz;
-	output.viewVector = normalize(output.viewVector);
+
+	output.colour = float4(0.678f, 1.0f, 0.184f, 1.0f);
 
 	return output;
 }
