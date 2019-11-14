@@ -18,10 +18,20 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture(L"Mountain", L"res/TexturesCom_RockGrassy0019_M.jpg");
 
 	mesh = new TessellatedPlane(renderer->getDevice(), renderer->getDeviceContext());
-	tessshader = new TessellationShader(renderer->getDevice(), hwnd);
-	lightshader = new LightShader(renderer->getDevice(), hwnd);
+	orthoMesh = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);	// Full screen size
+	orthoMesh2 = new OrthoMesh(renderer->getDevice(), renderer->getDeviceContext(), screenWidth, screenHeight);	// Full screen size
 
 	firefly = new SphereMesh(renderer->getDevice(), renderer->getDeviceContext());
+
+	blurshader = new BlurShader(renderer->getDevice(), hwnd);
+	tessshader = new TessellationShader(renderer->getDevice(), hwnd);	
+	lightshader = new LightShader(renderer->getDevice(), hwnd);
+	pixelshader = new PixelShader(renderer->getDevice(), hwnd);
+
+	blurRTT = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+	sceneRTT = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+	depthRTT = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
+
 	for (int i = 0; i < 3; i++)
 	{
 		
@@ -30,10 +40,6 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 		fireflylight[i]->setDiffuseColour(0.678f, 1.0f, 0.184f, 1.0f);
 		fireflylight[i]->setDirection(0.0f, -1.0f, 0.0f);
 	}
-
-	fireflylight[0]->setPosition(45.0f, 2.0f, 10.0f);
-	fireflylight[1]->setPosition(47.0f, 2.0f, 13.0f);
-	fireflylight[2]->setPosition(49.0f, 2.0f, 10.0f);
 
 	worldLight = new Light;
 	worldLight->setAmbientColour(0.05f, 0.05f, 0.05f, 1.0f);
@@ -63,6 +69,15 @@ bool App1::frame()
 		return false;
 	}
 	elapsedtime += timer->getTime();
+	
+	sinX = sin((fireflylight[0]->getPosition().y * 0.5) + (elapsedtime));
+	cosY = cos((fireflylight[0]->getPosition().x * 0.5) + (elapsedtime * 0.5));
+	
+	
+	fireflylight[0]->setPosition(45 + sinX, 2 + cosY, 10);
+	fireflylight[1]->setPosition(20 + sinX, 2 + cosY, 80); 
+	fireflylight[2]->setPosition(90 + sinX, 2 + cosY, 30);
+	
 	// Render the graphics.
 	result = render();
 	if (!result)
@@ -75,14 +90,26 @@ bool App1::frame()
 
 bool App1::render()
 {
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	ScenePass();
 
-	// Clear the scene. (default blue colour)
-	renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
+	BlurPass();
+
+	//DepthPass();
+
+	FinalPass();
+
+	return true;
+}
+
+void App1::ScenePass()
+{
+	sceneRTT->setRenderTarget(renderer->getDeviceContext());
+	sceneRTT->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
+
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 
 	// Generate the view matrix based on the camera's position.
 	camera->update();
-
 
 	// Get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
 	worldMatrix = renderer->getWorldMatrix();
@@ -95,28 +122,84 @@ bool App1::render()
 	tessshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
+
 	firefly->sendData(renderer->getDeviceContext());
 	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
 	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	worldMatrix = XMMatrixTranslation(fireflylight[1]->getPosition().x, fireflylight[1]->getPosition().y, fireflylight[1]->getPosition().z);
-	firefly->sendData(renderer->getDeviceContext());
+	
 	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
 	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	worldMatrix = XMMatrixTranslation(fireflylight[2]->getPosition().x, fireflylight[2]->getPosition().y, fireflylight[2]->getPosition().z);
-	firefly->sendData(renderer->getDeviceContext());
-	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05)* worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
+
+	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
 	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+
+	renderer->setBackBufferRenderTarget();
+
+}
+
+void App1::BlurPass()
+{
+	blurRTT->setRenderTarget(renderer->getDeviceContext());
+	blurRTT->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
+
+
+	XMMATRIX worldMatrix, viewMatrix, orthoMatrix;
+	float texsizeX = (float)sceneRTT->getTextureWidth();
+	float texsizeY = (float)sceneRTT->getTextureHeight();
+
+	worldMatrix = renderer->getWorldMatrix();
+	viewMatrix = camera->getOrthoViewMatrix();
+	orthoMatrix = blurRTT->getOrthoMatrix();
+
+	renderer->setZBuffer(false);
+	orthoMesh->sendData(renderer->getDeviceContext());
+	blurshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, orthoMatrix, sceneRTT->getShaderResourceView(), texsizeX, texsizeY);
+	blurshader->render(renderer->getDeviceContext(), orthoMesh->getIndexCount());
+	renderer->setZBuffer(true);
+	renderer->setBackBufferRenderTarget();
+}
+
+void App1::DepthPass()
+{
+
+}
+
+void App1::FinalPass()
+{
+	// Clear the scene. (default blue colour)
+	renderer->beginScene(0.39f, 0.58f, 0.92f, 1.0f);
+
+	XMMATRIX worldMatrix;
+
+	// Generate the view matrix based on the camera's position.
+	camera->update();
+
+	// Get the world, view, projection, and ortho matrices from the camera and Direct3D objects.
+	worldMatrix = renderer->getWorldMatrix();
+
+	renderer->setZBuffer(false);
+
+	XMMATRIX orthoMatrix = renderer->getOrthoMatrix();  // ortho matrix for 2D rendering
+	XMMATRIX orthoViewMatrix = camera->getOrthoViewMatrix();	// Default camera position for orthographic rendering
+	
+	orthoMesh2->sendData(renderer->getDeviceContext());
+	pixelshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, sceneRTT->getShaderResourceView(), blurRTT->getShaderResourceView());
+	pixelshader->render(renderer->getDeviceContext(), orthoMesh2->getIndexCount());
+
+	renderer->setZBuffer(true);
 
 	// Render GUI
 	gui();
 
 	// Swap the buffers
 	renderer->endScene();
-
-	return true;
 }
+
+
 
 void App1::gui()
 {

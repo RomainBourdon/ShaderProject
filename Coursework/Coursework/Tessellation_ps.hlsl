@@ -32,8 +32,8 @@ float4 calculateLighting (float3 lightDirection, float3 normal, float4 diffuse)
 
 float4 calculatePointLighting(float3 lightDirection, float3 normal, float4 ldiffuse, float att) 
 {
-	float intensity = saturate(dot(normal, lightDirection)) * att;
-	float4 colour = saturate(ldiffuse * intensity);
+	float intensity = saturate(dot(normal, lightDirection));
+	float4 colour = saturate(ldiffuse * intensity) * att;
 	return colour;
 }
 
@@ -45,6 +45,7 @@ float4 main(InputType input) : SV_TARGET
 	float distance[3];
 	float attenuation[3];
 	float cosa[3];
+	float denomenator[3];
 	float4 textureColour = texture0.Sample(sampler0, input.tex);
 	lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);
 
@@ -54,10 +55,15 @@ float4 main(InputType input) : SV_TARGET
 		distance[i] = length(lightVector[i]);
 		lightVector[i] = normalize(lightVector[i]);
 		cosa[i] = dot(direction[i+1], -lightVector[i]);
+		denomenator[i] = (consFactor + (linear_factor * distance[i]) + (quadratic * pow(distance[i], 2)));
 		
 		if (cosa[i] > cos(3.14159f / 10.0f))
 		{	
-			attenuation[i] = 1 / (consFactor + (linear_factor * distance[i]) + (quadratic * pow(distance[i], 2)));
+			attenuation[i] = 1 / denomenator[i];
+			if (denomenator[i] > 1)
+			{
+				attenuation[i] = 1;
+			}
 			lightColour[i+1] = calculatePointLighting(lightVector[i], input.normal, diffuse[i+1], attenuation[i]) + ambient[i+1];
 		}
 		else
