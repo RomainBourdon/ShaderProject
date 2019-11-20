@@ -9,7 +9,8 @@
 #include "LightShader.h"
 #include "BlurShader.h"
 #include "PixelShader.h"
-
+#include "DepthShader.h"
+ 
 class App1 : public BaseApplication
 {
 public:
@@ -21,7 +22,8 @@ public:
 	bool frame();
 	void ScenePass();
 	void BlurPass();
-	void DepthPass();
+	void DepthFieldPass();
+	void DepthShadowPass();
 	void FinalPass();
 
 protected:
@@ -38,6 +40,10 @@ private:
 	LightShader* lightshader;
 	BlurShader* blurshader;
 	PixelShader* pixelshader;
+
+	ShadowMap* depthMap;
+	ShadowMap* shadowMap;
+	DepthShader* depthshader;
 
 	Light* fireflylight[3];
 	Light* worldLight;
