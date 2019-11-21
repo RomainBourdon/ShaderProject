@@ -40,6 +40,5 @@ float4 main(InputType input) : SV_TARGET
 
 	float blurFactor = saturate(abs(depthValue - centreDepthTexel - offset) / range);
 
-	
 	return lerp(textureNonblur, textureblur, blurFactor);
 }
