@@ -3,7 +3,7 @@
 
 TessellationShader::TessellationShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
-	initShader(L"Tesselation_vs.cso", L"Tessellation_hs.cso", L"Tessellation_ds.cso", L"Tessellation_ps.cso");
+	initShader(L"Tessellation_vs.cso", L"Tessellation_hs.cso", L"Tessellation_ds.cso", L"Tessellation_ps.cso");
 }
 
 
@@ -70,6 +70,17 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	renderer->CreateSamplerState(&samplerDesc, &sampleState);
 
+	// Sampler for shadow map sampling.
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	samplerDesc.BorderColor[0] = 1.0f;
+	samplerDesc.BorderColor[1] = 1.0f;
+	samplerDesc.BorderColor[2] = 1.0f;
+	samplerDesc.BorderColor[3] = 1.0f;
+	renderer->CreateSamplerState(&samplerDesc, &sampleStateShadow);
+
 	// Setup light buffer
 // Setup the description of the light dynamic constant buffer that is in the pixel shader.
 // Note that ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail.
@@ -94,7 +105,7 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hs
 }
 
 
-void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, Light* light, Light* light1, Light* light2, Light* light3)
+void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, Light* light, Light* light1, Light* light2, Light* light3, ID3D11ShaderResourceView* shadowmap)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -103,6 +114,8 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	XMMATRIX tworld = XMMatrixTranspose(worldMatrix);
 	XMMATRIX tview = XMMatrixTranspose(viewMatrix);
 	XMMATRIX tproj = XMMatrixTranspose(projectionMatrix);
+	XMMATRIX tLightViewMatrix = XMMatrixTranspose(light->getViewMatrix());
+	XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(light->getOrthoMatrix());
 
 	// Lock the constant buffer so it can be written to.
 	result = deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -110,6 +123,8 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr->world = tworld;// worldMatrix;
 	dataPtr->view = tview;
 	dataPtr->projection = tproj;
+	dataPtr->lightView = tLightViewMatrix;
+	dataPtr->lightProjection = tLightProjectionMatrix;
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
@@ -151,6 +166,9 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	deviceContext->PSSetShaderResources(0, 1, &texture2);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
+
+	deviceContext->PSSetShaderResources(1, 1, &shadowmap);
+	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
 }
 
 

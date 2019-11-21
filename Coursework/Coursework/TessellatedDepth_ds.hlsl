@@ -1,5 +1,3 @@
-// Tessellation domain shader
-// After tessellation the domain shader processes the all the vertices
 Texture2D texture0 : register(t0);
 SamplerState sampler0 : register(s0);
 
@@ -8,8 +6,6 @@ cbuffer MatrixBuffer : register(b0)
 	matrix worldMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
-	matrix lightViewMatrix;
-	matrix lightProjectionMatrix;
 };
 
 cbuffer factorBuffer: register(b1)
@@ -37,11 +33,7 @@ struct InputType
 struct OutputType
 {
 	float4 position : SV_POSITION;
-	float2 tex : TEXCOORD0;
-	float3 normal : NORMAL;
-	float4 colour : COLOR;
-	float3 worldPosition : TEXCOORD1;
-	float4 lightViewPos : TEXCOORD2;
+	float4 Depthpos : TEXCOORD3;
 };
 
 float SampleHeightMap(float2 uv)
@@ -108,11 +100,11 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 
 	float3 wp1 = lerp(patch[0].worldPosition, patch[1].worldPosition, uvwCoord.y);
 	float3 wp2 = lerp(patch[3].worldPosition, patch[2].worldPosition, uvwCoord.y);
-	output.worldPosition = lerp(wp1, wp2, uvwCoord.x);
+	float3 worldPosition = lerp(wp1, wp2, uvwCoord.x);
 
-	output.normal = Sobel(UV);
-	output.normal = mul(output.normal, (float3x3)worldMatrix);
-	output.normal = normalize(output.normal);
+	float2 normal = Sobel(UV);
+	normal = mul(normal, (float3x3)worldMatrix);
+	normal = normalize(normal);
 
 
 	float h = texture0.SampleLevel(sampler0, UV, 0).r;
@@ -124,18 +116,8 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
 
-	// Send the input color into the pixel shader.
-	output.colour = patch[0].colour;
+	output.Depthpos = output.position;
 
-	// Calculate the position of the vertice as viewed by the light source.
-	output.lightViewPos = mul(float4(vertexPosition, 1.0f), worldMatrix);
-	output.lightViewPos = mul(output.lightViewPos, lightViewMatrix);
-	output.lightViewPos = mul(output.lightViewPos, lightProjectionMatrix);
-
-	//output.normal = Normal;
-	output.tex = UV;
 
 	return output;
 }
-
-

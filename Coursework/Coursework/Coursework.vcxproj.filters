@@ -39,6 +39,9 @@
     <ClCompile Include="BlurShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TessellatedDepthShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -62,11 +65,11 @@
     <ClInclude Include="BlurShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TessellatedDepthShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Tesselation_vs.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
     <FxCompile Include="Tessellation_hs.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
@@ -98,6 +101,21 @@
       <Filter>Resource Files</Filter>
     </FxCompile>
     <FxCompile Include="Texture_ps.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="TessellatedDepth_ds.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="TessellatedDepth_ps.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="TessellatedDepth_vs.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="TessellatedDepth_hs.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="Tessellation_vs.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>

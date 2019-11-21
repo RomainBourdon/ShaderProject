@@ -10,6 +10,7 @@
 #include "BlurShader.h"
 #include "PixelShader.h"
 #include "DepthShader.h"
+#include "TessellatedDepthShader.h"
  
 class App1 : public BaseApplication
 {
@@ -40,6 +41,7 @@ private:
 	LightShader* lightshader;
 	BlurShader* blurshader;
 	PixelShader* pixelshader;
+	TessellationDepthShader* tessdepthshader;
 
 	ShadowMap* depthMap;
 	ShadowMap* shadowMap;

@@ -4,7 +4,6 @@
 
 App1::App1()
 {
-
 }
 
 void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeight, Input *in, bool VSYNC, bool FULL_SCREEN)
@@ -31,6 +30,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	lightshader = new LightShader(renderer->getDevice(), hwnd);
 	pixelshader = new PixelShader(renderer->getDevice(), hwnd);
 	depthshader = new DepthShader(renderer->getDevice(), hwnd);
+	tessdepthshader = new TessellationDepthShader(renderer->getDevice(), hwnd);
 
 	blurRTT = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
 	sceneRTT = new RenderTexture(renderer->getDevice(), screenWidth, screenHeight, SCREEN_NEAR, SCREEN_DEPTH);
@@ -48,8 +48,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	worldLight = new Light;
 	worldLight->setAmbientColour(0.05f, 0.05f, 0.05f, 1.0f);
 	worldLight->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
-	worldLight->setDirection(-0.7f, -0.7f, 0.0f);
-	worldLight->setPosition(-100.0f, 100.0f, 100.0f);
+	worldLight->setDirection(0.7f, -0.7f, 0.0f);
+	worldLight->setPosition(-100.0f, 100.0f, 50.0f);
 }
 
 
@@ -93,14 +93,14 @@ bool App1::frame()
 }
 
 bool App1::render()
-{
+{	
+	DepthShadowPass();
+
 	ScenePass();
 
 	BlurPass();
 
 	DepthFieldPass();
-
-	DepthShadowPass();
 
 	FinalPass();
 
@@ -108,9 +108,10 @@ bool App1::render()
 }
 
 void App1::ScenePass()
-{
-	sceneRTT->setRenderTarget(renderer->getDeviceContext());
+{	
 	sceneRTT->clearRenderTarget(renderer->getDeviceContext(), 0.0f, 0.0f, 1.0f, 1.0f);
+	sceneRTT->setRenderTarget(renderer->getDeviceContext());
+	
 
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 
@@ -124,7 +125,7 @@ void App1::ScenePass()
 
 	// Send geometry data, set shader parameters, render object with shader
 	mesh->sendData(renderer->getDeviceContext());
-	tessshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, elapsedtime, camera->getPosition(), textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"Mountain"), worldLight, fireflylight[0], fireflylight[1], fireflylight[2]);
+	tessshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, elapsedtime, camera->getPosition(), textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"Mountain"), worldLight, fireflylight[0], fireflylight[1], fireflylight[2], shadowMap->getDepthMapSRV());
 	tessshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
@@ -144,7 +145,6 @@ void App1::ScenePass()
 	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	renderer->setBackBufferRenderTarget();
-
 }
 
 void App1::BlurPass()
@@ -171,15 +171,18 @@ void App1::BlurPass()
 
 void App1::DepthFieldPass()
 {
-	depthMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
+	depthRTT->setRenderTarget(renderer->getDeviceContext());
+	depthRTT->clearRenderTarget(renderer->getDeviceContext(), 1.0f, 0.0f, 0.0f, 1.0f);
 
 	XMMATRIX cameraViewMatrix = camera->getViewMatrix();
 	XMMATRIX ProjectionMatrix = renderer->getProjectionMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
+	worldMatrix = XMMatrixTranslation(-50.0f, 0.0f, -10.0f);
+
 	mesh->sendData(renderer->getDeviceContext());
-	depthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, cameraViewMatrix, ProjectionMatrix);
-	depthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+	tessdepthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, cameraViewMatrix, ProjectionMatrix, elapsedtime, camera->getPosition());
+	tessdepthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
 
@@ -205,7 +208,32 @@ void App1::DepthShadowPass()
 {
 	depthMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
 
+	worldLight->generateViewMatrix();
+	XMMATRIX lightViewMatrix = worldLight->getViewMatrix();
+	XMMATRIX lightProjectionMatrix = worldLight->getOrthoMatrix();
+	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
+	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
+
+	mesh->sendData(renderer->getDeviceContext());
+	tessdepthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightViewMatrix, elapsedtime, camera->getPosition());
+	tessdepthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+
+	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
+
+	firefly->sendData(renderer->getDeviceContext());
+	depthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+
+	worldMatrix = XMMatrixTranslation(fireflylight[1]->getPosition().x, fireflylight[1]->getPosition().y, fireflylight[1]->getPosition().z);
+
+	depthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
+
+	worldMatrix = XMMatrixTranslation(fireflylight[2]->getPosition().x, fireflylight[2]->getPosition().y, fireflylight[2]->getPosition().z);
+
+	depthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
+	depthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	renderer->setBackBufferRenderTarget();
 	renderer->resetViewport();
@@ -230,7 +258,7 @@ void App1::FinalPass()
 	XMMATRIX orthoViewMatrix = camera->getOrthoViewMatrix();	// Default camera position for orthographic rendering
 	
 	orthoMesh2->sendData(renderer->getDeviceContext());
-	pixelshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, sceneRTT->getShaderResourceView(), blurRTT->getShaderResourceView(), depthMap->getDepthMapSRV(),camera->getPosition());
+	pixelshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, orthoViewMatrix, orthoMatrix, sceneRTT->getShaderResourceView(), blurRTT->getShaderResourceView(), depthRTT->getShaderResourceView(), SCREEN_NEAR, SCREEN_DEPTH, 0.0, 1.0);
 	pixelshader->render(renderer->getDeviceContext(), orthoMesh2->getIndexCount());
 
 	renderer->setZBuffer(true);

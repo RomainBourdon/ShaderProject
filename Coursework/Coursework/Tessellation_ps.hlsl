@@ -3,6 +3,8 @@
 
 Texture2D texture0 : register(t0);
 SamplerState sampler0 : register(s0);
+Texture2D ShadowTexture : register(t1);
+SamplerState shadowSampler : register(s1);
 
 struct InputType
 {
@@ -11,6 +13,7 @@ struct InputType
 	float3 normal : NORMAL;
 	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
+	float4 lightViewPos : TEXCOORD2;
 };
 
 cbuffer LightBuffer : register(b0)
@@ -46,30 +49,58 @@ float4 main(InputType input) : SV_TARGET
 	float attenuation[3];
 	float cosa[3];
 	float denomenator[3];
-	float4 textureColour = texture0.Sample(sampler0, input.tex);
-	lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);
 
-	for (int i = 0; i < 3; i++)
+	float depthValue;
+	float lightDepthValue;
+	float shadowMapBias = 0.005f;
+	//float4 colour = float4(0.f, 0.f, 0.f, 1.f);
+
+	float4 textureColour = texture0.Sample(sampler0, input.tex);
+
+	float2 pTexCoord = input.lightViewPos.xy / input.lightViewPos.w;
+	pTexCoord *= float2(0.5, -0.5);
+	pTexCoord += float2(0.5f, 0.5f);
+
+	if (pTexCoord.x < 0.f || pTexCoord.x > 1.f || pTexCoord.y < 0.f || pTexCoord.y > 1.f)
 	{
-		lightVector[i] = position[i] - input.worldPosition;
-		distance[i] = length(lightVector[i]);
-		lightVector[i] = normalize(lightVector[i]);
-		cosa[i] = dot(direction[i+1], -lightVector[i]);
-		denomenator[i] = (consFactor + (linear_factor * distance[i]) + (quadratic * pow(distance[i], 2)));
-		
-		if (cosa[i] > cos(3.14159f / 10.0f))
-		{	
-			attenuation[i] = 1 / denomenator[i];
-			if (denomenator[i] > 1)
-			{
-				attenuation[i] = 1;
-			}
-			lightColour[i+1] = calculatePointLighting(lightVector[i], input.normal, diffuse[i+1], attenuation[i]) + ambient[i+1];
-		}
-		else
-		{
-			lightColour[i+1] = ambient[i+1];
-		}
+		return textureColour;
 	}
-	return (lightColour[0] + lightColour[1] + lightColour[2] + lightColour[3]) *textureColour;
+
+	// Sample the shadow map (get depth of geometry)
+	depthValue = ShadowTexture.Sample(shadowSampler, pTexCoord).r;
+	// Calculate the depth from the light.
+	lightDepthValue = input.lightViewPos.z / input.lightViewPos.w;
+	lightDepthValue -= shadowMapBias;
+
+	// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
+	if (lightDepthValue < depthValue)
+	{
+		//colour = calculateLighting(-direction, input.normal, diffuse);
+
+		lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);
+	}
+		for (int i = 0; i < 3; i++)
+		{
+			lightVector[i] = position[i] - input.worldPosition;
+			distance[i] = length(lightVector[i]);
+			lightVector[i] = normalize(lightVector[i]);
+			cosa[i] = dot(direction[i + 1], -lightVector[i]);
+			denomenator[i] = (consFactor + (linear_factor * distance[i]) + (quadratic * pow(distance[i], 2)));
+
+			if (cosa[i] > cos(3.14159f / 10.0f))
+			{
+				attenuation[i] = 1 / denomenator[i];
+				if (denomenator[i] > 1)
+				{
+					attenuation[i] = 1;
+				}
+				lightColour[i + 1] = calculatePointLighting(lightVector[i], input.normal, diffuse[i + 1], attenuation[i]) + ambient[i + 1];
+			}
+			else
+			{
+				lightColour[i + 1] = ambient[i + 1];
+			}
+		}
+	
+		return (lightColour[0] + lightColour[1] + lightColour[2] + lightColour[3]) *textureColour;
 }

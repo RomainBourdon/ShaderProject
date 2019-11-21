@@ -11,13 +11,15 @@ public:
 	PixelShader(ID3D11Device* device, HWND hwnd);
 	~PixelShader();
 
-	struct CameraBufferType
+	struct DepthBufferType
 	{
-		XMFLOAT3 position;
-		float padding;
+		float nearVal;
+		float farVal;
+		float offset;
+		float range;
 	};
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, ID3D11ShaderResourceView* depthmap, XMFLOAT3 camera);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& world, const XMMATRIX& view, const XMMATRIX& projection, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, ID3D11ShaderResourceView* depthmap, float nearest, float farest, float offset, float range);
 
 private:
 	void initShader(const wchar_t* vs, const wchar_t* ps);
@@ -26,7 +28,7 @@ private:
 	ID3D11Buffer* matrixBuffer;
 	ID3D11SamplerState* sampleState;
 	ID3D11SamplerState* sampleStateDepth;
-	ID3D11Buffer* cameraBuffer;
+	ID3D11Buffer* DepthBuffer;
 	
 };
 

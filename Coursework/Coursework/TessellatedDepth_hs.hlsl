@@ -1,5 +1,3 @@
-// Tessellation Hull Shader
-// Prepares control points for tessellation
 cbuffer factorBuffer: register(b0)
 {
 	float3 Camera;
