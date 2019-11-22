@@ -39,7 +39,7 @@ void PixelShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
-	D3D11_BUFFER_DESC CameraBufferDesc;
+	D3D11_BUFFER_DESC DepthBufferDesc;
 
 	// Load (+ compile) shader files
 	loadTextureVertexShader(vsFilename);
@@ -53,13 +53,13 @@ void PixelShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	matrixBufferDesc.MiscFlags = 0;
 	matrixBufferDesc.StructureByteStride = 0;
 
-	CameraBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	CameraBufferDesc.ByteWidth = sizeof(CameraBufferType);
-	CameraBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	CameraBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	CameraBufferDesc.MiscFlags = 0;
-	CameraBufferDesc.StructureByteStride = 0;
-	renderer->CreateBuffer(&CameraBufferDesc, NULL, &cameraBuffer);
+	DepthBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	DepthBufferDesc.ByteWidth = sizeof(DepthBufferType);
+	DepthBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	DepthBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	DepthBufferDesc.MiscFlags = 0;
+	DepthBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&DepthBufferDesc, NULL, &DepthBuffer);
 
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
@@ -91,7 +91,7 @@ void PixelShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 }
 
 
-void PixelShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, ID3D11ShaderResourceView* depthmap, XMFLOAT3 camera)
+void PixelShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, ID3D11ShaderResourceView* depthmap, float nearest, float farest, float offset, float range)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -113,13 +113,15 @@ void PixelShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
-	CameraBufferType* camPtr;
-	deviceContext->Map(cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	camPtr = (CameraBufferType*)mappedResource.pData;
-	camPtr->position = camera;
-	camPtr->padding = 0.f;
-	deviceContext->Unmap(cameraBuffer, 0);
-	deviceContext->PSSetConstantBuffers(0, 1, &cameraBuffer);
+	DepthBufferType* depthPtr;
+	deviceContext->Map(DepthBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	depthPtr = (DepthBufferType*)mappedResource.pData;
+	depthPtr->offset = offset;
+	depthPtr->farVal = farest;
+	depthPtr->nearVal = nearest;
+	depthPtr->range = range;
+	deviceContext->Unmap(DepthBuffer, 0);
+	deviceContext->PSSetConstantBuffers(0, 1, &DepthBuffer);
 
 
 	// Set shader texture and sampler resource in the pixel shader.
