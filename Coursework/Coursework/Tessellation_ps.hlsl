@@ -79,28 +79,31 @@ float4 main(InputType input) : SV_TARGET
 
 		lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);
 	}
-		for (int i = 0; i < 3; i++)
-		{
-			lightVector[i] = position[i] - input.worldPosition;
-			distance[i] = length(lightVector[i]);
-			lightVector[i] = normalize(lightVector[i]);
-			cosa[i] = dot(direction[i + 1], -lightVector[i]);
-			denomenator[i] = (consFactor + (linear_factor * distance[i]) + (quadratic * pow(distance[i], 2)));
 
-			if (cosa[i] > cos(3.14159f / 10.0f))
+	for (int i = 0; i < 3; i++)
+	{
+		lightVector[i] = position[i] - input.worldPosition;
+		distance[i] = length(lightVector[i]);
+		lightVector[i] = normalize(lightVector[i]);
+		cosa[i] = dot(direction[i + 1], -lightVector[i]);
+		denomenator[i] = (consFactor + (linear_factor * distance[i]) + (quadratic * pow(distance[i], 2)));
+
+		if (cosa[i] > cos(3.14159f / 10.0f))
+		{
+			attenuation[i] = 1 / denomenator[i];
+			if (denomenator[i] > 1)
 			{
-				attenuation[i] = 1 / denomenator[i];
-				if (denomenator[i] > 1)
-				{
-					attenuation[i] = 1;
-				}
-				lightColour[i + 1] = calculatePointLighting(lightVector[i], input.normal, diffuse[i + 1], attenuation[i]) + ambient[i + 1];
+				attenuation[i] = 1;
 			}
-			else
-			{
-				lightColour[i + 1] = ambient[i + 1];
-			}
+			lightColour[i + 1] = calculatePointLighting(lightVector[i], input.normal, diffuse[i + 1], attenuation[i]) + ambient[i + 1];
 		}
+		else
+		{
+			lightColour[i + 1] = ambient[i + 1];
+		}
+	}
+
+	lightColour[0] = saturate(lightColour[0] + ambient[0]);
 	
-		return (lightColour[0] + lightColour[1] + lightColour[2] + lightColour[3]) *textureColour;
+	return (saturate(lightColour[0]) + lightColour[1] + lightColour[2] + lightColour[3]) *textureColour;
 }

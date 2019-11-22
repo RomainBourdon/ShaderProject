@@ -50,6 +50,7 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	worldLight->setDiffuseColour(1.0f, 1.0f, 1.0f, 1.0f);
 	worldLight->setDirection(0.7f, -0.7f, 0.0f);
 	worldLight->setPosition(-100.0f, 100.0f, 50.0f);
+	worldLight->generateOrthoMatrix((float)screenWidth, (float)screenHeight, 0.1f, 100.f);
 }
 
 
@@ -206,14 +207,14 @@ void App1::DepthFieldPass()
 
 void App1::DepthShadowPass()
 {
-	depthMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
+	shadowMap->BindDsvAndSetNullRenderTarget(renderer->getDeviceContext());
 
 	worldLight->generateViewMatrix();
 	XMMATRIX lightViewMatrix = worldLight->getViewMatrix();
 	XMMATRIX lightProjectionMatrix = worldLight->getOrthoMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
-	worldMatrix = XMMatrixTranslation(-50.f, 0.f, -10.f);
+	worldMatrix = XMMatrixTranslation(-50.f, 0.f, 50.f);
 
 	mesh->sendData(renderer->getDeviceContext());
 	tessdepthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightViewMatrix, elapsedtime, camera->getPosition());
