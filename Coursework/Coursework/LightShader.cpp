@@ -131,7 +131,7 @@ void LightShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
 	TimeBufferType* timePtr;
-	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	deviceContext->Map(TimeBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	timePtr = (TimeBufferType*)mappedResource.pData;
 	timePtr->time = time;
 	timePtr->padding = XMFLOAT3(0.0f, 0.0f, 0.0f);

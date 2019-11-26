@@ -110,6 +110,10 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	float h = texture0.SampleLevel(sampler0, UV, 0).r;
 	vertexPosition.y += (15.0f * h);// *float3(Normal);
 
+	// Calculate the position of the vertice as viewed by the light source.
+	//output.lightViewPos = mul(float4(vertexPosition, 1.0f), worldMatrix);
+	//output.lightViewPos = mul(output.lightViewPos, lightViewMatrix);
+	//output.lightViewPos = mul(output.lightViewPos, lightProjectionMatrix);
 
 	// Calculate the position of the new vertex against the world, view, and projection matrices.
 	output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
