@@ -16,8 +16,8 @@ struct InputType
 
 cbuffer DepthBuffer : register(b0)
 {
-	float nearVal;
-	float farVal;
+	float nearest;
+	float farest;
 	float offset;
 	float range;
 }
@@ -30,15 +30,15 @@ float4 main(InputType input) : SV_TARGET
 
 	float depthValue = depthmap.Sample(Sampler0, input.tex).r;
 
-	float centreDepthTexel = depthmap.Sample(Sampler0, float2(0.5f, 0.5f)).r;
+	float centreDepth = depthmap.Sample(Sampler0, float2(0.5f, 0.5f)).r;
 
 	depthValue = 1 - depthValue;
-	centreDepthTexel = 1 - centreDepthTexel;
+	centreDepth = 1 - centreDepth;
 
-	centreDepthTexel *= (farVal - nearVal);
-	depthValue *= (farVal - nearVal);
+	centreDepth *= (farest - nearest);
+	depthValue *= (farest - nearest);
 
-	float blurFactor = saturate(abs(depthValue - centreDepthTexel - offset) / range);
+	float blurFac = saturate(abs(depthValue - centreDepth - offset) / range);
 
-	return lerp(textureNonblur, textureblur, blurFactor);
+	return lerp(textureNonblur, textureblur, blurFac);
 }
