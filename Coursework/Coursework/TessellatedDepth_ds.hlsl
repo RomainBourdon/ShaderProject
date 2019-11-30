@@ -33,7 +33,7 @@ struct InputType
 struct OutputType
 {
 	float4 position : SV_POSITION;
-	float4 Depthpos : TEXCOORD3;
+	float4 depthPosition : TEXCOORD0;
 };
 
 float SampleHeightMap(float2 uv)
@@ -108,19 +108,14 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 
 
 	float h = texture0.SampleLevel(sampler0, UV, 0).r;
-	vertexPosition.y += (15.0f * h);// *float3(Normal);
-
-	// Calculate the position of the vertice as viewed by the light source.
-	//output.lightViewPos = mul(float4(vertexPosition, 1.0f), worldMatrix);
-	//output.lightViewPos = mul(output.lightViewPos, lightViewMatrix);
-	//output.lightViewPos = mul(output.lightViewPos, lightProjectionMatrix);
+	vertexPosition.y += (15.0f * h);
 
 	// Calculate the position of the new vertex against the world, view, and projection matrices.
 	output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
 
-	output.Depthpos = output.position;
+	output.depthPosition = output.position;
 
 
 	return output;

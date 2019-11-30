@@ -31,7 +31,6 @@ struct InputType
 	float3 normal : NORMAL;
 	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
-	float4 lightViewPos : TEXCOORD2;
 };
 
 struct OutputType
@@ -42,6 +41,7 @@ struct OutputType
 	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
 	float4 lightViewPos : TEXCOORD2;
+	float4 depthPosition: TEXCOORD3;
 };
 
 float SampleHeightMap(float2 uv)
@@ -134,6 +134,8 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 
 	//output.normal = Normal;
 	output.tex = UV;
+
+	output.depthPosition = output.position;
 
 	return output;
 }

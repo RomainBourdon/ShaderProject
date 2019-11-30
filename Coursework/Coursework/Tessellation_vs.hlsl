@@ -30,7 +30,6 @@ struct OutputType
 	float3 normal : NORMAL;
 	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
-	float4 lightViewPos : TEXCOORD2;
 };
 
 OutputType main(InputType input)
@@ -49,8 +48,6 @@ OutputType main(InputType input)
 
 	float4 worldPosition = mul(input.position, worldMatrix);
 	output.worldPosition = worldPosition;
-
-	output.lightViewPos = float4(0.0, 0.0, 0.0, 1.0);
 
 	return output;
 }

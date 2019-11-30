@@ -3,7 +3,7 @@
 
 TessellationDepthShader::TessellationDepthShader(ID3D11Device* device, HWND hwnd) : BaseShader(device, hwnd)
 {
-	initShader(L"TessellatedDepth_vs.cso", L"TessellatedDepth_hs.cso", L"TessellatedDepth_ds.cso", L"TessellatedDepth_ps.cso");
+	initShader(L"Tessellation_vs.cso", L"Tessellation_hs.cso", L"Tessellation_ds.cso", L"TessellatedDepth_ps.cso");
 }
 
 
@@ -112,6 +112,4 @@ void TessellationDepthShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	deviceContext->HSSetConstantBuffers(0, 1, &factorBuffer);
 	deviceContext->DSSetConstantBuffers(1, 1, &factorBuffer);
 	deviceContext->VSSetConstantBuffers(1, 1, &factorBuffer);
-
-
 }

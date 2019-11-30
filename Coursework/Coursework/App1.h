@@ -12,6 +12,7 @@
 #include "DepthShader.h"
 #include "TessellatedDepthShader.h"
 #include "shadowtexture.h"
+#include "ShadowShader.h"
  
 class App1 : public BaseApplication
 {
@@ -46,6 +47,7 @@ private:
 	PixelShader* pixelshader;
 	TessellationDepthShader* tessdepthshader;
 	shadowtexture* shadow;
+	ShadowShader* shadowshader;
 
 	ShadowMap* depthMap;
 	ShadowMap* shadowMap;
@@ -53,6 +55,8 @@ private:
 
 	Light* fireflylight[3];
 	Light* worldLight;
+	Model* teapot;
+	PlaneMesh* meshing;
 
 	RenderTexture* blurRTT;
 	RenderTexture* sceneRTT;
@@ -61,5 +65,6 @@ private:
 	float elapsedtime;
 	float cosY;
 	float sinX;
+	float lightpos[3];
 };
 #endif

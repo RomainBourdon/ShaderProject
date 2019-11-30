@@ -31,41 +31,36 @@ TessellationShader::~TessellationShader()
 
 void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
 {
-	D3D11_BUFFER_DESC factorBufferDesc;
+	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
+	D3D11_BUFFER_DESC factorBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
 	loadPixelShader(psFilename);
 
 	// Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
-	D3D11_BUFFER_DESC matrixBufferDesc;
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
 	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	matrixBufferDesc.MiscFlags = 0;
 	matrixBufferDesc.StructureByteStride = 0;
-
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
 
-	factorBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	factorBufferDesc.ByteWidth = sizeof(const_edgesBufferType);
-	factorBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	factorBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	factorBufferDesc.MiscFlags = 0;
-	factorBufferDesc.StructureByteStride = 0;
-	renderer->CreateBuffer(&factorBufferDesc, NULL, &factorBuffer);
-
 	// Create a texture sampler state description.
-	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.MipLODBias = 0.0f;
 	samplerDesc.MaxAnisotropy = 1;
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+	samplerDesc.BorderColor[0] = 0;
+	samplerDesc.BorderColor[1] = 0;
+	samplerDesc.BorderColor[2] = 0;
+	samplerDesc.BorderColor[3] = 0;
 	samplerDesc.MinLOD = 0;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	renderer->CreateSamplerState(&samplerDesc, &sampleState);
@@ -82,8 +77,6 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 	renderer->CreateSamplerState(&samplerDesc, &sampleStateShadow);
 
 	// Setup light buffer
-// Setup the description of the light dynamic constant buffer that is in the pixel shader.
-// Note that ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail.
 	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
 	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
@@ -91,6 +84,14 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 	lightBufferDesc.MiscFlags = 0;
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
+
+	factorBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	factorBufferDesc.ByteWidth = sizeof(const_edgesBufferType);
+	factorBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	factorBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	factorBufferDesc.MiscFlags = 0;
+	factorBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&factorBufferDesc, NULL, &factorBuffer);
 
 }
 
@@ -148,17 +149,21 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	lightPtr->ambient[1] = light1->getAmbientColour();
 	lightPtr->ambient[2] = light2->getAmbientColour();
 	lightPtr->ambient[3] = light3->getAmbientColour();
+
 	lightPtr->diffuse[0] = light->getDiffuseColour();
 	lightPtr->diffuse[1] = light1->getDiffuseColour();
 	lightPtr->diffuse[2] = light2->getDiffuseColour();
 	lightPtr->diffuse[3] = light3->getDiffuseColour();
-	lightPtr->direction[0] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0.0f);
+
+	lightPtr->direction[0] = XMFLOAT4(light->getDirection().z, light->getDirection().y, light->getDirection().x, 0.0f);
 	lightPtr->direction[1] = XMFLOAT4(light1->getDirection().x, light1->getDirection().y, light1->getDirection().z, 0.0f);
 	lightPtr->direction[2] = XMFLOAT4(light2->getDirection().x, light2->getDirection().y, light2->getDirection().z, 0.0f);
 	lightPtr->direction[3] = XMFLOAT4(light3->getDirection().x, light3->getDirection().y, light3->getDirection().z, 0.0f);
+
 	lightPtr->position[0] = XMFLOAT4(light1->getPosition().x, light1->getPosition().y, light1->getPosition().z, 0.0);
 	lightPtr->position[1] = XMFLOAT4(light2->getPosition().x, light2->getPosition().y, light2->getPosition().z, 0.0);
 	lightPtr->position[2] = XMFLOAT4(light3->getPosition().x, light3->getPosition().y, light3->getPosition().z, 0.0);
+
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
 
@@ -167,7 +172,6 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	deviceContext->PSSetShaderResources(0, 1, &texture2);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);
-
 	deviceContext->PSSetShaderResources(1, 1, &shadowmap);
 	deviceContext->PSSetSamplers(1, 1, &sampleStateShadow);
 }

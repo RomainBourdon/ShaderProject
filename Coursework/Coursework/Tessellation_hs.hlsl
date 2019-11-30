@@ -13,7 +13,6 @@ struct InputType
 	float3 normal : NORMAL;
 	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
-	float4 lightViewPos : TEXCOORD2;
 };
 
 struct ConstantOutputType
@@ -29,7 +28,6 @@ struct OutputType
 	float3 normal : NORMAL;
 	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
-	float4 lightViewPos : TEXCOORD2;
 };
 
 ConstantOutputType PatchConstantFunction(InputPatch<InputType, 4> inputPatch, uint patchId : SV_PrimitiveID)
@@ -86,8 +84,6 @@ OutputType main(InputPatch<InputType, 4> patch, uint pointId : SV_OutputControlP
 	output.colour = patch[pointId].colour;
 
 	output.worldPosition = patch[pointId].worldPosition;
-
-	output.lightViewPos = patch[pointId].lightViewPos;
 
 	return output;
 }
