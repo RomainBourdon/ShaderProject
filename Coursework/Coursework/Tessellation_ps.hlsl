@@ -43,17 +43,19 @@ float4 calculatePointLighting(float3 lightDirection, float3 normal, float4 ldiff
 float4 main(InputType input) : SV_TARGET
 {
 	float4 lightColour[4];
-	float consFactor = 1.0f, linear_factor = 0.125f, quadratic = 0.0f;
+	float consFactor = 1.0f, linear_factor = 0.25f, quadratic = 0.1f;
 	float3 lightVector[3];
 	
 	float distance[3];
 	float attenuation[3];
 	float cosa[3];
 	float denomenator[3];
+	float theta = cos(3.14159 / 10);
+	float phi = cos(2*3.14159 / 2);
 
 	float depthValue;
 	float lightDepthValue;
-	float shadowMapBias = 0.005f;
+	float shadowMapBias = 0.05f;
 	float4 textureColour = texture0.Sample(sampler0, input.tex);
 
 	float2 pTexCoord = input.lightViewPos.xy / input.lightViewPos.w;
@@ -74,8 +76,6 @@ float4 main(InputType input) : SV_TARGET
 	// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
 	if (lightDepthValue < depthValue)
 	{
-		//colour = calculateLighting(-direction, input.normal, diffuse);
-		//return float4(1.0f, 1.0f, 1.0f, 1.0f);
 		lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);
 	}
 
@@ -84,10 +84,10 @@ float4 main(InputType input) : SV_TARGET
 		lightVector[i] = position[i] - input.worldPosition;
 		distance[i] = length(lightVector[i]);
 		lightVector[i] = normalize(lightVector[i]);
-		cosa[i] = dot(direction[i + 1], -lightVector[i]);
+		cosa[i] = dot(normalize(direction[i + 1]), -lightVector[i]);
 		denomenator[i] = (consFactor + (linear_factor * distance[i]) + (quadratic * pow(distance[i], 2)));
-
-		if (cosa[i] > cos(3.14159f / 10.0f))
+		
+		if (cosa[i] > cos(3.14159 / 10))
 		{
 			attenuation[i] = 1 / denomenator[i];
 			if (denomenator[i] > 1)
@@ -96,13 +96,13 @@ float4 main(InputType input) : SV_TARGET
 			}
 			lightColour[i + 1] = calculatePointLighting(lightVector[i], input.normal, diffuse[i + 1], attenuation[i]) + ambient[i + 1];
 		}
-		else
+		else 
 		{
 			lightColour[i + 1] = ambient[i + 1];
 		}
 	}
 
-	//lightColour[0] = saturate(lightColour[0] + ambient[0]);
+	lightColour[0] = saturate(lightColour[0] + ambient[0]);
 	
-	return (saturate(lightColour[0]) + lightColour[1] + lightColour[2] + lightColour[3])*textureColour;
+	return (saturate(lightColour[0] + lightColour[1] + lightColour[2] + lightColour[3]))*textureColour;
 }

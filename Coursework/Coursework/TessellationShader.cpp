@@ -155,7 +155,7 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	lightPtr->diffuse[2] = light2->getDiffuseColour();
 	lightPtr->diffuse[3] = light3->getDiffuseColour();
 
-	lightPtr->direction[0] = XMFLOAT4(light->getDirection().z, light->getDirection().y, light->getDirection().x, 0.0f);
+	lightPtr->direction[0] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0.0f);
 	lightPtr->direction[1] = XMFLOAT4(light1->getDirection().x, light1->getDirection().y, light1->getDirection().z, 0.0f);
 	lightPtr->direction[2] = XMFLOAT4(light2->getDirection().x, light2->getDirection().y, light2->getDirection().z, 0.0f);
 	lightPtr->direction[3] = XMFLOAT4(light3->getDirection().x, light3->getDirection().y, light3->getDirection().z, 0.0f);

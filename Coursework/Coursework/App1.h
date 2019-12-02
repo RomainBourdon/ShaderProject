@@ -66,5 +66,6 @@ private:
 	float cosY;
 	float sinX;
 	float lightpos[3];
+	float dir[3];
 };
 #endif

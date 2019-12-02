@@ -61,6 +61,10 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	lightpos[1] = 10;
 	lightpos[2] = 50;
 
+	dir[0] = 1.0f;
+	dir[1] = -0.2f;
+	dir[2] = 0.0f;
+
 }
 
 
@@ -94,6 +98,8 @@ bool App1::frame()
 	fireflylight[2]->setPosition(90 + sinX, 2 + cosY, 30);
 
 	worldLight->setPosition(lightpos[0], lightpos[1], lightpos[2]);
+
+	worldLight->setDirection(dir[0], dir[1], dir[2]);
 	
 	// Render the graphics.
 	result = render();
@@ -141,12 +147,12 @@ void App1::ScenePass()
 	tessshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, elapsedtime, camera->getPosition(), textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"Mountain"), worldLight, fireflylight[0], fireflylight[1], fireflylight[2], shadowMap->getDepthMapSRV());
 	tessshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
-	//worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
+	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
 
-	worldMatrix = XMMatrixTranslation(worldLight->getPosition().x, worldLight->getPosition().y, worldLight->getPosition().z);
+	//worldMatrix = XMMatrixTranslation(worldLight->getPosition().x, worldLight->getPosition().y, worldLight->getPosition().z);
 
 	firefly->sendData(renderer->getDeviceContext());
-	lightshader->setShaderParameters(renderer->getDeviceContext(), (/*XMMatrixScaling(0.05, 0.05, 0.05) **/ worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
+	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
 	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	worldMatrix = XMMatrixTranslation(fireflylight[1]->getPosition().x, fireflylight[1]->getPosition().y, fireflylight[1]->getPosition().z);
@@ -159,25 +165,6 @@ void App1::ScenePass()
 	lightshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), fireflylight[0], fireflylight[1], fireflylight[2], elapsedtime);
 	lightshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
-
-	//worldMatrix = XMMatrixTranslation(-50.0f, 0.0f, -10.0f);
-
-	//mesh->sendData(renderer->getDeviceContext());
-	//tessshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, elapsedtime, camera->getPosition(), textureMgr->getTexture(L"brick"), textureMgr->getTexture(L"Mountain"), worldLight, fireflylight[0], fireflylight[1], fireflylight[2], shadowMap->getDepthMapSRV());
-	//tessshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
-	///*shadowshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix,
-	//	textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), worldLight);
-	//shadowshader->render(renderer->getDeviceContext(), meshing->getIndexCount());*/
-
-	//worldMatrix = renderer->getWorldMatrix();
-	//worldMatrix = XMMatrixTranslation(0.f, 7.f, 5.f);
-	//XMMATRIX scaleMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-	//worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);
-	//// Render model
-	//teapot->sendData(renderer->getDeviceContext());
-	//shadowshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"brick"), shadowMap->getDepthMapSRV(), worldLight);
-	//shadowshader->render(renderer->getDeviceContext(), teapot->getIndexCount());
-	//renderer->setBackBufferRenderTarget();
 }
 
 void App1::BlurPass()
@@ -211,14 +198,14 @@ void App1::DepthFieldPass()
 	XMMATRIX ProjectionMatrix = renderer->getProjectionMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
-	worldMatrix = XMMatrixTranslation(-50.0f, 0.0f, -50.0f);
+	//worldMatrix = XMMatrixTranslation(-50.0f, 0.0f, -50.0f);
 
 	mesh->sendData(renderer->getDeviceContext());
 	tessdepthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, cameraViewMatrix, ProjectionMatrix, elapsedtime, camera->getPosition());
 	tessdepthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
-	//worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
-	worldMatrix = XMMatrixTranslation(worldLight->getPosition().x, worldLight->getPosition().y, worldLight->getPosition().z);
+	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
+	//worldMatrix = XMMatrixTranslation(worldLight->getPosition().x, worldLight->getPosition().y, worldLight->getPosition().z);
 
 	firefly->sendData(renderer->getDeviceContext());
 	depthshader->setShaderParameters(renderer->getDeviceContext(), (XMMatrixScaling(0.05, 0.05, 0.05) * worldMatrix), cameraViewMatrix, ProjectionMatrix);
@@ -247,26 +234,11 @@ void App1::DepthShadowPass()
 	XMMATRIX lightProjectionMatrix = worldLight->getOrthoMatrix();
 	XMMATRIX worldMatrix = renderer->getWorldMatrix();
 
-	worldMatrix = XMMatrixTranslation(50.0f, 0.0f, -10.0f);
-
-	/*meshing->sendData(renderer->getDeviceContext());
-	depthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
-	depthshader->render(renderer->getDeviceContext(), meshing->getIndexCount());*/
+	//worldMatrix = XMMatrixTranslation(50.0f, 0.0f, -10.0f);
 	
 	mesh->sendData(renderer->getDeviceContext());
 	tessdepthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix, elapsedtime, camera->getPosition());
-	tessdepthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
-
-	//worldMatrix = renderer->getWorldMatrix();
-	//worldMatrix = XMMatrixTranslation(0.f, 7.f, 5.f);
-	//XMMATRIX scaleMatrix = XMMatrixScaling(0.5f, 0.5f, 0.5f);
-	//worldMatrix = XMMatrixMultiply(worldMatrix, scaleMatrix);
-	//// Render model
-	//teapot->sendData(renderer->getDeviceContext());
-	//depthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix);
-	//depthshader->render(renderer->getDeviceContext(), teapot->getIndexCount());
-
-	
+	tessdepthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());	
 
 	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
 
@@ -338,6 +310,9 @@ void App1::gui()
 	ImGui::SliderFloat("world light x", &lightpos[0], -100, 100);
 	ImGui::SliderFloat("world light y", &lightpos[1], -100, 100);
 	ImGui::SliderFloat("world light z", &lightpos[2], -100, 100);
+	ImGui::SliderFloat("world light dirx", &dir[0], -1, 1);
+	ImGui::SliderFloat("world light diry", &dir[1], -1, 1);
+	ImGui::SliderFloat("world light dirz", &dir[2], -1, 1);
 
 	// Render UI
 	ImGui::Render();
