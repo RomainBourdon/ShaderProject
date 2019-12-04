@@ -11,7 +11,6 @@ struct InputType
 	float3 position : POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
 };
 
@@ -26,7 +25,6 @@ struct OutputType
 	float3 position : POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
 };
 
@@ -86,9 +84,6 @@ OutputType main(InputPatch<InputType, 4> patch, uint pointId : SV_OutputControlP
 
 	// Set the input normals as the output normals.
 	output.normal = patch[pointId].normal;
-
-	// Set the input colour as the output colour.
-	output.colour = patch[pointId].colour;
 
 	output.worldPosition = patch[pointId].worldPosition;
 

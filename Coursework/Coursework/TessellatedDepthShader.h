@@ -15,6 +15,8 @@ private:
 		XMMATRIX world;
 		XMMATRIX view;
 		XMMATRIX projection;
+		XMMATRIX lightViewMatrix;
+		XMMATRIX lightProjectionMatrix;
 	};
 
 	struct const_edgesBufferType
@@ -28,7 +30,7 @@ public:
 	TessellationDepthShader(ID3D11Device* device, HWND hwnd);
 	~TessellationDepthShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, Light* light);
 
 private:
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);

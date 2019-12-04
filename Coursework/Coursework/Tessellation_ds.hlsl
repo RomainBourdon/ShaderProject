@@ -29,7 +29,6 @@ struct InputType
 	float3 position : POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
 };
 
@@ -38,7 +37,6 @@ struct OutputType
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
 	float4 lightViewPos : TEXCOORD2;
 	float4 depthPosition: TEXCOORD3;
@@ -114,18 +112,13 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	output.normal = mul(output.normal, (float3x3)worldMatrix);
 	output.normal = normalize(output.normal);
 
-
 	float h = texture0.SampleLevel(sampler0, UV, 0).r;
 	vertexPosition.y += (15.0f * h);// *float3(Normal);
-
 
 	// Calculate the position of the new vertex against the world, view, and projection matrices.
 	output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
-
-	// Send the input color into the pixel shader.
-	output.colour = patch[0].colour;
 
 	// Calculate the position of the vertice as viewed by the light source.
 	output.lightViewPos = mul(float4(vertexPosition, 1.0f), worldMatrix);

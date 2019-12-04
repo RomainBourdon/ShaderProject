@@ -83,7 +83,7 @@ void TessellationDepthShader::initShader(const wchar_t* vsFilename, const wchar_
 }
 
 
-void TessellationDepthShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera)
+void TessellationDepthShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, Light * light)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -92,6 +92,8 @@ void TessellationDepthShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	XMMATRIX tworld = XMMatrixTranspose(worldMatrix);
 	XMMATRIX tview = XMMatrixTranspose(viewMatrix);
 	XMMATRIX tproj = XMMatrixTranspose(projectionMatrix);
+	XMMATRIX tLightViewMatrix = XMMatrixTranspose(light->getViewMatrix());
+	XMMATRIX tLightProjectionMatrix = XMMatrixTranspose(light->getOrthoMatrix());
 
 	// Lock the constant buffer so it can be written to.
 	result = deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -99,6 +101,8 @@ void TessellationDepthShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	dataPtr->world = tworld;// worldMatrix;
 	dataPtr->view = tview;
 	dataPtr->projection = tproj;
+	dataPtr->lightViewMatrix = tLightViewMatrix;
+	dataPtr->lightProjectionMatrix = tLightProjectionMatrix;
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);

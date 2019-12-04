@@ -26,11 +26,12 @@ float4 main(InputType input) : SV_TARGET
 {
 	float4 FinaltextureColor;
 	float4 textureNonblur = textureScene.Sample(Sampler0, input.tex);
+
 	float4 textureblur = textureBlur.Sample(Sampler0, input.tex);
 
-	float depthValue = depthmap.Sample(Sampler0, input.tex).r;
+	float depthValue = depthmap.Sample(SamplerDepth, input.tex).r;
 
-	float centreDepth = depthmap.Sample(Sampler0, float2(0.5f, 0.5f)).r;
+	float centreDepth = depthmap.Sample(SamplerDepth, float2(0.5f, 0.5f)).r;
 
 	depthValue = 1 - depthValue;
 	centreDepth = 1 - centreDepth;

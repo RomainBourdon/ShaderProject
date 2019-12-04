@@ -19,7 +19,6 @@ struct InputType
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
 	float4 lightViewPos : TEXCOORD2;
 	float4 depthPosition: TEXCOORD3;
@@ -50,33 +49,38 @@ float4 main(InputType input) : SV_TARGET
 	float attenuation[3];
 	float cosa[3];
 	float denomenator[3];
-	float theta = cos(3.14159 / 10);
-	float phi = cos(2*3.14159 / 2);
 
 	float depthValue;
 	float lightDepthValue;
-	float shadowMapBias = 0.05f;
+	float shadowMapBias = 0.005f;
 	float4 textureColour = texture0.Sample(sampler0, input.tex);
 
 	float2 pTexCoord = input.lightViewPos.xy / input.lightViewPos.w;
 	pTexCoord *= float2(0.5, -0.5);
 	pTexCoord += float2(0.5f, 0.5f);
 
+	float4 colour = float4(0, 0, 0, 0);
+
 	if (pTexCoord.x < 0.f || pTexCoord.x > 1.f || pTexCoord.y < 0.f || pTexCoord.y > 1.f)
 	{
 		return textureColour;
 	}
 
-	// Sample the shadow map (get depth of geometry)
+	 //Sample the shadow map (get depth of geometry)
 	depthValue = ShadowTexture.Sample(shadowSampler, pTexCoord).r;
-	// Calculate the depth from the light.
+	//Calculate the depth from the light.
 	lightDepthValue = input.lightViewPos.z / input.lightViewPos.w;
 	lightDepthValue -= shadowMapBias;
 
-	// Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
+	 //Compare the depth of the shadow map value and the depth of the light to determine whether to shadow or to light this pixel.
 	if (lightDepthValue < depthValue)
 	{
-		lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);
+		
+		lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);// */ (1.0f, 1.0f, 1.0f, 1.0f);
+	}
+	else 
+	{
+		lightColour[0] = 0;
 	}
 
 	for (int i = 0; i < 3; i++)
@@ -94,7 +98,7 @@ float4 main(InputType input) : SV_TARGET
 			{
 				attenuation[i] = 1;
 			}
-			lightColour[i + 1] = calculatePointLighting(lightVector[i], input.normal, diffuse[i + 1], attenuation[i]) + ambient[i + 1];
+			lightColour[i + 1] = calculatePointLighting(lightVector[i], input.normal, diffuse[i + 1], attenuation[i]);
 		}
 		else 
 		{
@@ -102,7 +106,7 @@ float4 main(InputType input) : SV_TARGET
 		}
 	}
 
-	lightColour[0] = saturate(lightColour[0] + ambient[0]);
-	
-	return (saturate(lightColour[0] + lightColour[1] + lightColour[2] + lightColour[3]))*textureColour;
+	lightColour[0] = (lightColour[0] + ambient[0]);
+	colour = (lightColour[0] + lightColour[1] + lightColour[2] + lightColour[3]);
+	return colour * textureColour;
 }

@@ -28,7 +28,6 @@ struct OutputType
 	float3 position : POSITION;
 	float2 tex : TEXCOORD0;
 	float3 normal : NORMAL;
-	float4 colour : COLOR;
 	float3 worldPosition : TEXCOORD1;
 };
 
@@ -42,9 +41,6 @@ OutputType main(InputType input)
 	output.tex = input.tex;
 
 	output.normal = input.normal;
-
-	// Pass the input color into the hull shader.
-	output.colour = float4(1.0, 0.0, 0.0, 1.0);
 
 	float4 worldPosition = mul(input.position, worldMatrix);
 	output.worldPosition = worldPosition;

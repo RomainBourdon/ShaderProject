@@ -162,7 +162,7 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	lightPtr->position[0] = XMFLOAT4(light1->getPosition().x, light1->getPosition().y, light1->getPosition().z, 0.0);
 	lightPtr->position[1] = XMFLOAT4(light2->getPosition().x, light2->getPosition().y, light2->getPosition().z, 0.0);
-	lightPtr->position[2] = XMFLOAT4(light3->getPosition().x, light3->getPosition().y, light3->getPosition().z, 0.0);
+ 	lightPtr->position[2] = XMFLOAT4(light3->getPosition().x, light3->getPosition().y, light3->getPosition().z, 0.0);
 
 	deviceContext->Unmap(lightBuffer, 0);
 	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
