@@ -42,6 +42,12 @@ float4 calculatePointLighting(float3 lightDirection, float3 normal, float4 ldiff
 float4 main(InputType input) : SV_TARGET
 {
 	float4 lightColour[4];
+
+[unroll]
+for (int i = 0; i < 4; ++i)
+{
+	lightColour[i] = float4(0, 0, 0, 0);
+}
 	float consFactor = 1.0f, linear_factor = 0.25f, quadratic = 0.1f;
 	float3 lightVector[3];
 	
@@ -76,11 +82,7 @@ float4 main(InputType input) : SV_TARGET
 	if (lightDepthValue < depthValue)
 	{
 		
-		lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);// */ (1.0f, 1.0f, 1.0f, 1.0f);
-	}
-	else 
-	{
-		lightColour[0] = 0;
+		lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);
 	}
 
 	for (int i = 0; i < 3; i++)
@@ -107,6 +109,6 @@ float4 main(InputType input) : SV_TARGET
 	}
 
 	lightColour[0] = (lightColour[0] + ambient[0]);
-	colour = (lightColour[0] + lightColour[1] + lightColour[2] + lightColour[3]);
-	return colour * textureColour;
+	colour = (saturate(lightColour[0]) + lightColour[1] + lightColour[2] + lightColour[3]);
+	return colour *textureColour;
 }
