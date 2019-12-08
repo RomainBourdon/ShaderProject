@@ -25,14 +25,7 @@ struct InputType
 };
 
 // Calculate lighting intensity based on direction and normal. Combine with light colour.
-float4 calculateLighting (float3 lightDirection, float3 normal, float4 diffuse)
-{
-	float intensity = saturate(dot(normal, lightDirection));
-	float4 colour = saturate(diffuse * intensity);
-	return colour;
-}
-
-float4 calculatePointLighting(float3 lightDirection, float3 normal, float4 ldiffuse, float att) 
+float4 calculateLighting(float3 lightDirection, float3 normal, float4 ldiffuse, float att) 
 {
 	float intensity = saturate(dot(normal, lightDirection));
 	float4 colour = saturate(ldiffuse * intensity) * att;
@@ -41,24 +34,29 @@ float4 calculatePointLighting(float3 lightDirection, float3 normal, float4 ldiff
 
 float4 main(InputType input) : SV_TARGET
 {
+	//set light colour to black
 	float4 lightColour[4];
 
-[unroll]
-for (int i = 0; i < 4; ++i)
-{
-	lightColour[i] = float4(0, 0, 0, 0);
-}
+	[unroll]
+	for (int i = 0; i < 4; ++i)
+	{
+		lightColour[i] = float4(0, 0, 0, 0);
+	}
+	//initialise attenuation variables 
 	float consFactor = 1.0f, linear_factor = 0.25f, quadratic = 0.1f;
-	float3 lightVector[3];
-	
 	float distance[3];
 	float attenuation[3];
 	float cosa[3];
 	float denomenator[3];
+	//create light vector variables
+	float3 lightVector[3];
 
+	//initialise depth variables
 	float depthValue;
 	float lightDepthValue;
 	float shadowMapBias = 0.005f;
+
+	//get the colour texture
 	float4 textureColour = texture0.Sample(sampler0, input.tex);
 
 	float2 pTexCoord = input.lightViewPos.xy / input.lightViewPos.w;
@@ -82,17 +80,23 @@ for (int i = 0; i < 4; ++i)
 	if (lightDepthValue < depthValue)
 	{
 		
-		lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0]);
+		lightColour[0] = calculateLighting(-direction[0], input.normal, diffuse[0], 1);
 	}
 
+	//loop through all three spotlights and calculate lighting
 	for (int i = 0; i < 3; i++)
 	{
+		//set the light vector from the light to the pixel
 		lightVector[i] = position[i] - input.worldPosition;
+		//get the length of the vector
 		distance[i] = length(lightVector[i]);
+		//normalize
 		lightVector[i] = normalize(lightVector[i]);
+		//calculate the angle between the pixel and light
 		cosa[i] = dot(normalize(direction[i + 1]), -lightVector[i]);
 		denomenator[i] = (consFactor + (linear_factor * distance[i]) + (quadratic * pow(distance[i], 2)));
 		
+		//only do spotlight if its in the cone
 		if (cosa[i] > cos(3.14159 / 10))
 		{
 			attenuation[i] = 1 / denomenator[i];
@@ -100,7 +104,7 @@ for (int i = 0; i < 4; ++i)
 			{
 				attenuation[i] = 1;
 			}
-			lightColour[i + 1] = calculatePointLighting(lightVector[i], input.normal, diffuse[i + 1], attenuation[i]);
+			lightColour[i + 1] = calculateLighting(lightVector[i], input.normal, diffuse[i + 1], attenuation[i]);
 		}
 		else 
 		{
@@ -108,6 +112,7 @@ for (int i = 0; i < 4; ++i)
 		}
 	}
 
+	//combine and saturate all the lights together with texture colour
 	lightColour[0] = (lightColour[0] + ambient[0]);
 	colour = (saturate(lightColour[0]) + lightColour[1] + lightColour[2] + lightColour[3]);
 	return colour *textureColour;

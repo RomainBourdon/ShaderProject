@@ -1,3 +1,4 @@
+//depth pixel shader
 struct InputType
 {
 	float4 position : SV_POSITION;

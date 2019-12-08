@@ -44,16 +44,19 @@ struct OutputType
 
 float SampleHeightMap(float2 uv)
 {
+	//sample the height map from the offset tex coords
 	const float SCALE = 3.0f;
 	return SCALE * texture0.SampleLevel(sampler0, uv, 0.0f).r;
 }
 
 float3 Sobel(float2 tc)
 {
+	//get the height maps dimensions
 	float HeightMapDimensionsX, HeightMapDimensionsY;
 	texture0.GetDimensions(HeightMapDimensionsX, HeightMapDimensionsY);
 	float2 pxSz = float2(1.0f / HeightMapDimensionsX, 1.0f / HeightMapDimensionsY);
 
+	//set the offsets of the pixels
 	float2 ooo = tc + float2(-pxSz.x, -pxSz.y);
 	float2 o1o = tc + float2(0.0f, -pxSz.y);
 	float2 o2o = tc + float2(pxSz.x, -pxSz.y);
@@ -64,6 +67,7 @@ float3 Sobel(float2 tc)
 	float2 o02 = tc + float2(-pxSz.x, pxSz.y);
 	float2 o12 = tc + float2(0.0f, pxSz.y);
 	float2 o22 = tc + float2(pxSz.x, pxSz.y);
+
 
 	float h00 = SampleHeightMap(ooo);
 	float h10 = SampleHeightMap(o1o);
@@ -76,9 +80,11 @@ float3 Sobel(float2 tc)
 	float h12 = SampleHeightMap(o12);
 	float h22 = SampleHeightMap(o22);
 
+	//combine th sampled height map coords
 	float Gx = h00 - h20 + 2.0f * h01 - 2.0f * h21 + h02 - h22;
 	float Gy = h00 + 2.0f * h10 + h20 - h02 - 2.0f * h12 - h22;
 
+	//generate the z component
 	float Gz = 0.5f * sqrt(max(0.1f, 1.0f - Gx * Gx - Gy * Gy));
 
 	return normalize(float3(2.0f * Gx, Gz, 2.0f * Gy));
@@ -94,7 +100,6 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	// Determine the position of the new vertex.
 	// Invert the y and Z components of uvwCoord as these coords are generated in UV space and therefore y is positive downward.
 	// Alternatively you can set the output topology of the hull shader to cw instead of ccw (or vice versa).
-	//vertexPosition = uvwCoord.x * patch[0].position + -uvwCoord.y * patch[1].position + -uvwCoord.z * patch[2].position;
 
 	float3 v1 = lerp(patch[0].position, patch[1].position, uvwCoord.y);
 	float3 v2 = lerp(patch[3].position, patch[2].position, uvwCoord.y);

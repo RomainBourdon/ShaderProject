@@ -1,3 +1,4 @@
+//vertex shader doesnt do much, just passes data through
 cbuffer MatrixBuffer: register(b0)
 {
 	matrix worldMatrix;
@@ -22,10 +23,12 @@ OutputType main(InputType input)
 {
 	OutputType output;
 
+	// Calculate the position of the vertex against the world, view, and projection matrices.
 	output.position = mul(input.position, worldMatrix);
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
 
+	//pass tex coord
 	output.tex = input.tex;
 
 	return output;

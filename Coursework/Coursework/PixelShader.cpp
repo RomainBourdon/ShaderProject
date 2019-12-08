@@ -74,7 +74,10 @@ void PixelShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
 	samplerDesc.MinLOD = 0;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	// Create the texture sampler state.
+	renderer->CreateSamplerState(&samplerDesc, &sampleState);
 
+	//create a shadow sampler
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
@@ -85,8 +88,7 @@ void PixelShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilenam
 	samplerDesc.BorderColor[3] = 1.0f;
 	renderer->CreateSamplerState(&samplerDesc, &sampleStateDepth);
 
-	// Create the texture sampler state.
-	renderer->CreateSamplerState(&samplerDesc, &sampleState);
+	
 
 }
 
@@ -104,7 +106,7 @@ void PixelShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	tview = XMMatrixTranspose(viewMatrix);
 	tproj = XMMatrixTranspose(projectionMatrix);
 
-	// Sned matrix data
+	// Send matrix data
 	result = deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 	dataPtr->world = tworld;// worldMatrix;
@@ -113,6 +115,7 @@ void PixelShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const 
 	deviceContext->Unmap(matrixBuffer, 0);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
+	//send depth data
 	DepthBufferType* depthPtr;
 	deviceContext->Map(DepthBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	depthPtr = (DepthBufferType*)mappedResource.pData;

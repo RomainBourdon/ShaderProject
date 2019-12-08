@@ -9,16 +9,19 @@ TessellationDepthShader::TessellationDepthShader(ID3D11Device* device, HWND hwnd
 
 TessellationDepthShader::~TessellationDepthShader()
 {
+	//release sample state
 	if (sampleState)
 	{
 		sampleState->Release();
 		sampleState = 0;
 	}
+	//release matrix constant buffer
 	if (matrixBuffer)
 	{
 		matrixBuffer->Release();
 		matrixBuffer = 0;
 	}
+	//release the layout
 	if (layout)
 	{
 		layout->Release();
@@ -39,7 +42,7 @@ void TessellationDepthShader::initShader(const wchar_t* vsFilename, const wchar_
 	loadVertexShader(vsFilename);
 	loadPixelShader(psFilename);
 
-	// Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
+	// Setup the description of the dynamic matrix constant buffer.
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
@@ -50,13 +53,14 @@ void TessellationDepthShader::initShader(const wchar_t* vsFilename, const wchar_
 
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
 
+	//set up the description of the dynamic camera constant buffer
 	factorBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	factorBufferDesc.ByteWidth = sizeof(const_edgesBufferType);
+	factorBufferDesc.ByteWidth = sizeof(cameraBufferType);
 	factorBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	factorBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	factorBufferDesc.MiscFlags = 0;
 	factorBufferDesc.StructureByteStride = 0;
-	renderer->CreateBuffer(&factorBufferDesc, NULL, &factorBuffer);
+	renderer->CreateBuffer(&factorBufferDesc, NULL, &cameraBuffer);
 
 	// Create a texture sampler state description.
 	samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
@@ -107,13 +111,14 @@ void TessellationDepthShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
-	const_edgesBufferType* facPtr;
-	deviceContext->Map(factorBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	facPtr = (const_edgesBufferType*)mappedResource.pData;
+	//send the constant camera buffer
+	cameraBufferType* facPtr;
+	deviceContext->Map(cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	facPtr = (cameraBufferType*)mappedResource.pData;
 	facPtr->time = time;
 	facPtr->camera = camera;
-	deviceContext->Unmap(factorBuffer, 0);
-	deviceContext->HSSetConstantBuffers(0, 1, &factorBuffer);
-	deviceContext->DSSetConstantBuffers(1, 1, &factorBuffer);
-	deviceContext->VSSetConstantBuffers(1, 1, &factorBuffer);
+	deviceContext->Unmap(cameraBuffer, 0);
+	deviceContext->HSSetConstantBuffers(0, 1, &cameraBuffer);
+	deviceContext->DSSetConstantBuffers(1, 1, &cameraBuffer);
+	deviceContext->VSSetConstantBuffers(1, 1, &cameraBuffer);
 }

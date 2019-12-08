@@ -21,7 +21,7 @@ private:
 		XMMATRIX lightProjection;
 	};
 
-	struct const_edgesBufferType
+	struct cameraBufferType
 	{
 		XMFLOAT3 camera;
 		float time;
@@ -47,7 +47,7 @@ private:
 
 private:
 	ID3D11Buffer* matrixBuffer;
-	ID3D11Buffer* factorBuffer;
+	ID3D11Buffer* cameraBuffer;
 	ID3D11Buffer* lightBuffer;
 	ID3D11SamplerState* sampleState;
 	ID3D11SamplerState* sampleStateShadow;

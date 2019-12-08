@@ -1,5 +1,5 @@
 // Tessellation vertex shader.
-// Doesn't do much, could manipulate the control points
+// vertex shader Doesn't do much, could manipulate the control points
 // Pass forward data, strip out some values not required for example.
 cbuffer MatrixBuffer : register(b0)
 {
@@ -38,10 +38,13 @@ OutputType main(InputType input)
 	// Pass the vertex position into the hull shader.
 	output.position = input.position;
 
+	//pass texcoords into hull shader
 	output.tex = input.tex;
 
+	//pass normals into hull shader
 	output.normal = input.normal;
 
+	//calculate and pass the world position for the hull shader
 	float4 worldPosition = mul(input.position, worldMatrix);
 	output.worldPosition = worldPosition;
 

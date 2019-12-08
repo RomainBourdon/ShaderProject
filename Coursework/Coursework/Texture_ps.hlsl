@@ -24,22 +24,30 @@ cbuffer DepthBuffer : register(b0)
 
 float4 main(InputType input) : SV_TARGET
 {
+	//sample the scene texture
 	float4 FinaltextureColor;
 	float4 textureNonblur = textureScene.Sample(Sampler0, input.tex);
 
+	//sample the blur scene
 	float4 textureblur = textureBlur.Sample(Sampler0, input.tex);
 
+	//get the depth value of the scene
 	float depthValue = depthmap.Sample(SamplerDepth, input.tex).r;
 
+	//get the depth value of the centre of the texture
 	float centreDepth = depthmap.Sample(SamplerDepth, float2(0.5f, 0.5f)).r;
 
+	//make the depth values less then 1
 	depthValue = 1 - depthValue;
 	centreDepth = 1 - centreDepth;
 
+	//get the distance of the depth value
 	centreDepth *= (farest - nearest);
 	depthValue *= (farest - nearest);
 
+	//calculate the blur factor
 	float blurFac = saturate(abs(depthValue - centreDepth - offset) / range);
 
+	//interpolate between the scene textures
 	return lerp(textureNonblur, textureblur, blurFac);
 }

@@ -9,20 +9,41 @@ TessellationShader::TessellationShader(ID3D11Device* device, HWND hwnd) : BaseSh
 
 TessellationShader::~TessellationShader()
 {
+	//release the sample state
 	if (sampleState)
 	{
 		sampleState->Release();
 		sampleState = 0;
 	}
+	//release the martix buffer
 	if (matrixBuffer)
 	{
 		matrixBuffer->Release();
 		matrixBuffer = 0;
 	}
+	//release the layout
 	if (layout)
 	{
 		layout->Release();
 		layout = 0;
+	}
+	//release the light buffer
+	if (lightBuffer)
+	{
+		lightBuffer->Release();
+		lightBuffer = 0;
+	}
+	//release the camera buffer
+	if (cameraBuffer)
+	{
+		cameraBuffer->Release();
+		cameraBuffer = 0;
+	}
+	//release shadow sampler
+	if (sampleStateShadow)
+	{
+		sampleStateShadow->Release();
+		sampleStateShadow = 0;
 	}
 
 	//Release base shader components
@@ -34,7 +55,7 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 	D3D11_BUFFER_DESC matrixBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	D3D11_BUFFER_DESC lightBufferDesc;
-	D3D11_BUFFER_DESC factorBufferDesc;
+	D3D11_BUFFER_DESC cameraBufferDesc;
 
 	// Load (+ compile) shader files
 	loadVertexShader(vsFilename);
@@ -85,13 +106,13 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* ps
 	lightBufferDesc.StructureByteStride = 0;
 	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
 
-	factorBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	factorBufferDesc.ByteWidth = sizeof(const_edgesBufferType);
-	factorBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	factorBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	factorBufferDesc.MiscFlags = 0;
-	factorBufferDesc.StructureByteStride = 0;
-	renderer->CreateBuffer(&factorBufferDesc, NULL, &factorBuffer);
+	cameraBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cameraBufferDesc.ByteWidth = sizeof(cameraBufferType);
+	cameraBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cameraBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cameraBufferDesc.MiscFlags = 0;
+	cameraBufferDesc.StructureByteStride = 0;
+	renderer->CreateBuffer(&cameraBufferDesc, NULL, &cameraBuffer);
 
 }
 
@@ -130,18 +151,19 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	deviceContext->DSSetConstantBuffers(0, 1, &matrixBuffer);
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
-	const_edgesBufferType* facPtr;
-	deviceContext->Map(factorBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	facPtr = (const_edgesBufferType*)mappedResource.pData;
+	//send camera data to shaders
+	cameraBufferType* facPtr;
+	deviceContext->Map(cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	facPtr = (cameraBufferType*)mappedResource.pData;
 	facPtr->time = time;
 	facPtr->camera = camera;
-	deviceContext->Unmap(factorBuffer, 0);
-	deviceContext->HSSetConstantBuffers(0, 1, &factorBuffer);
-	deviceContext->DSSetConstantBuffers(1, 1, &factorBuffer);
-	deviceContext->VSSetConstantBuffers(1, 1, &factorBuffer);
+	deviceContext->Unmap(cameraBuffer, 0);
+	deviceContext->HSSetConstantBuffers(0, 1, &cameraBuffer);
+	deviceContext->DSSetConstantBuffers(1, 1, &cameraBuffer);
+	deviceContext->VSSetConstantBuffers(1, 1, &cameraBuffer);
 
 	//Additional
-// Send light data to pixel shader
+	// Send light data to pixel shader
 	LightBufferType* lightPtr;
 	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	lightPtr = (LightBufferType*)mappedResource.pData;

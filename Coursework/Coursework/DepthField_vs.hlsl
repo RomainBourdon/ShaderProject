@@ -1,3 +1,4 @@
+//vertex shader doesnt do much just pass data throught to pixel shader
 cbuffer MatrixBuffer : register(b0)
 {
 	matrix worldMatrix;

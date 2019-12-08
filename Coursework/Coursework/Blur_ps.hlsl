@@ -1,3 +1,4 @@
+//pass in the texture and sampler
 Texture2D shaderTexture: register(t0);
 SamplerState SampleType: register(s0);
 

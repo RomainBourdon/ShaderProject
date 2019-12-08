@@ -32,9 +32,6 @@ OutputType main(InputType input)
 {
 	OutputType output;
 
-
-	//input.position.y = sin((input.position.x * 1) + (time * 2)) * 2;
-
 	// Calculate the position of the vertex against the world, view, and projection matrices.
 	output.position = mul(input.position, worldMatrix);
 	output.position = mul(output.position, viewMatrix);

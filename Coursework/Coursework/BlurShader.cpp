@@ -73,8 +73,8 @@ void BlurShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	renderer->CreateSamplerState(&samplerDesc, &sampleState);
 
-	// Setup light buffer
-	// Setup the description of the light dynamic constant buffer that is in the pixel shader.
+	// Setup screen buffer
+	// Setup the description of the screen dynamic constant buffer that is in the pixel shader.
 	// Note that ByteWidth always needs to be a multiple of 16 if using D3D11_BIND_CONSTANT_BUFFER or CreateBuffer will fail.
 	screenBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	screenBufferDesc.ByteWidth = sizeof(screenBufferType);
@@ -93,7 +93,6 @@ void BlurShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const X
 
 	XMMATRIX tworld, tview, tproj;
 
-
 	// Transpose the matrices to prepare them for the shader.
 	tworld = XMMatrixTranspose(worldMatrix);
 	tview = XMMatrixTranspose(viewMatrix);
@@ -107,7 +106,7 @@ void BlurShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const X
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
 
 	//Additional
-	// Send light data to pixel shader
+	// Send screen data to pixel shader
 	screenBufferType* screenPtr;
 	deviceContext->Map(screenBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	screenPtr = (screenBufferType*)mappedResource.pData;

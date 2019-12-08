@@ -11,8 +11,6 @@
 #include "PixelShader.h"
 #include "DepthShader.h"
 #include "TessellatedDepthShader.h"
-#include "shadowtexture.h"
-#include "ShadowShader.h"
  
 class App1 : public BaseApplication
 {
@@ -34,7 +32,6 @@ protected:
 	void gui();
 
 private:
-	OrthoMesh* orthoMesh3;
 	OrthoMesh* orthoMesh2;
 	TessellatedPlane* mesh;
 	SphereMesh* firefly;
@@ -46,17 +43,12 @@ private:
 	BlurShader* blurshader;
 	PixelShader* pixelshader;
 	TessellationDepthShader* tessdepthshader;
-	shadowtexture* shadow;
-	ShadowShader* shadowshader;
-
-	ShadowMap* depthMap;
-	ShadowMap* shadowMap;
 	DepthShader* depthshader;
 
+	ShadowMap* shadowMap;
+	
 	Light* fireflylight[3];
 	Light* worldLight;
-	Model* teapot;
-	PlaneMesh* meshing;
 
 	RenderTexture* blurRTT;
 	RenderTexture* sceneRTT;

@@ -48,7 +48,7 @@ void TessellatedPlane::initBuffers(ID3D11Device* device)
 
 			// Load the vertex array with data.
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);  // Bottom left.
-			vertices[index].texture = XMFLOAT2(u, v);//0.0f, 1.0f);
+			vertices[index].texture = XMFLOAT2(u, v);
 			vertices[index].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
 			indices[index] = index;
 			index++;
@@ -57,7 +57,7 @@ void TessellatedPlane::initBuffers(ID3D11Device* device)
 			positionZ = (float)(j);
 
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);  // Top left.
-			vertices[index].texture = XMFLOAT2(u + increment, v);//0.0f, 0.0f);
+			vertices[index].texture = XMFLOAT2(u + increment, v);
 			vertices[index].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
 			indices[index] = index;
 			index++;
@@ -66,7 +66,7 @@ void TessellatedPlane::initBuffers(ID3D11Device* device)
 			positionZ = (float)(j + 1);
 
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);  // Top right.
-			vertices[index].texture = XMFLOAT2(u + increment, v + increment);//1.0f, 0.0f);
+			vertices[index].texture = XMFLOAT2(u + increment, v + increment);
 			vertices[index].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
 			indices[index] = index;
 			index++;
@@ -75,7 +75,7 @@ void TessellatedPlane::initBuffers(ID3D11Device* device)
 			positionZ = (float)(j + 1);
 
 			vertices[index].position = XMFLOAT3(positionX, 0.0f, positionZ);  // Bottom right.
-			vertices[index].texture = XMFLOAT2(u, v + increment);// 1.0f, 1.0f);
+			vertices[index].texture = XMFLOAT2(u, v + increment);
 			vertices[index].normal = XMFLOAT3(0.0f, 1.0f, 00);
 			indices[index] = index;
 			index++;
