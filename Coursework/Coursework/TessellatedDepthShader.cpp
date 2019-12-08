@@ -87,7 +87,7 @@ void TessellationDepthShader::initShader(const wchar_t* vsFilename, const wchar_
 }
 
 
-void TessellationDepthShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, Light * light)
+void TessellationDepthShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, Light * light, float heightmapmul)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -115,10 +115,9 @@ void TessellationDepthShader::setShaderParameters(ID3D11DeviceContext* deviceCon
 	cameraBufferType* facPtr;
 	deviceContext->Map(cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	facPtr = (cameraBufferType*)mappedResource.pData;
-	facPtr->time = time;
+	facPtr->heightMapMul = heightmapmul;
 	facPtr->camera = camera;
 	deviceContext->Unmap(cameraBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &cameraBuffer);
 	deviceContext->DSSetConstantBuffers(1, 1, &cameraBuffer);
-	deviceContext->VSSetConstantBuffers(1, 1, &cameraBuffer);
 }

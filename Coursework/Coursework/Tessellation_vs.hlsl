@@ -10,12 +10,6 @@ cbuffer MatrixBuffer : register(b0)
 	matrix lightProjectionMatrix;
 };
 
-cbuffer factorBuffer: register(b1)
-{
-	float3 Camera;
-	float time;
-};
-
 struct InputType
 {
 	float3 position : POSITION;

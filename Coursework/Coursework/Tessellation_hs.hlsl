@@ -1,9 +1,9 @@
 // Tessellation Hull Shader
 // Prepares control points for tessellation
-cbuffer factorBuffer: register(b0)
+cbuffer cameraBuffer: register(b0)
 {
 	float3 Camera;
-	float time;
+	float heightmapmul;
 };
 
 struct InputType

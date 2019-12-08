@@ -64,6 +64,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	dir[1] = -0.3f;
 	dir[2] = 0.0f;
 
+	for (int i = 0; i < 3; ++i)
+	{
+		colour[i] = 1;
+	}
+	HeightMapMul = 15;
 }
 
 
@@ -104,6 +109,9 @@ bool App1::frame()
 	worldLight->setPosition(lightpos[0], lightpos[1], lightpos[2]);
 
 	worldLight->setDirection(dir[0], dir[1], dir[2]);
+
+	worldLight->setDiffuseColour(colour[0], colour[1], colour[2], 1.0f);
+	HeightMapMul = HeightMapMul;
 	
 	// Render the graphics.
 	result = render();
@@ -151,7 +159,7 @@ void App1::ScenePass()
 	// Send tessellsted plane data, set shader parameters, render with shader
 	mesh->sendData(renderer->getDeviceContext());
 	tessshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, elapsedtime, camera->getPosition(), textureMgr->getTexture(L"brick"), 
-		textureMgr->getTexture(L"Mountain"), worldLight, fireflylight[0], fireflylight[1], fireflylight[2], shadowMap->getDepthMapSRV());
+		textureMgr->getTexture(L"Mountain"), worldLight, fireflylight[0], fireflylight[1], fireflylight[2], shadowMap->getDepthMapSRV(), HeightMapMul);
 	tessshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	//set the sphere meshes world matrix to be at the spotlights lights position
@@ -215,7 +223,7 @@ void App1::DepthFieldPass()
 
 	//send plane data to the shaders and render with that shader
 	mesh->sendData(renderer->getDeviceContext());
-	tessdepthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, cameraViewMatrix, ProjectionMatrix, elapsedtime, camera->getPosition(), worldLight);
+	tessdepthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, cameraViewMatrix, ProjectionMatrix, elapsedtime, camera->getPosition(), worldLight, HeightMapMul);
 	tessdepthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());
 
 	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
@@ -250,7 +258,7 @@ void App1::DepthShadowPass()
 	
 	//send plane data to the shaders and render with that shader
 	mesh->sendData(renderer->getDeviceContext());
-	tessdepthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix, elapsedtime, camera->getPosition(), worldLight);
+	tessdepthshader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, lightViewMatrix, lightProjectionMatrix, elapsedtime, camera->getPosition(), worldLight, HeightMapMul);
 	tessdepthshader->render(renderer->getDeviceContext(), mesh->getIndexCount());	
 
 	worldMatrix = XMMatrixTranslation(fireflylight[0]->getPosition().x, fireflylight[0]->getPosition().y, fireflylight[0]->getPosition().z);
@@ -322,6 +330,8 @@ void App1::gui()
 	ImGui::SliderFloat("world light dirx", &dir[0], -1, 1);
 	ImGui::SliderFloat("world light diry", &dir[1], -1, 1);
 	ImGui::SliderFloat("world light dirz", &dir[2], -1, 1);
+	ImGui::SliderFloat("height map multiplier", &HeightMapMul, 0, 30);
+	ImGui::ColorPicker3("world light colour", colour);
 
 	// Render UI
 	ImGui::Render();

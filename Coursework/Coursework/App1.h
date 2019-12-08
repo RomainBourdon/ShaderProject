@@ -59,5 +59,7 @@ private:
 	float sinX;
 	float lightpos[3];
 	float dir[3];
+	float colour[3];
+	float HeightMapMul;
 };
 #endif

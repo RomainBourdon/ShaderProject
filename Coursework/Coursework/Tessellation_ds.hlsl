@@ -12,10 +12,10 @@ cbuffer MatrixBuffer : register(b0)
 	matrix lightProjectionMatrix;
 };
 
-cbuffer factorBuffer: register(b1)
+cbuffer cameraBuffer: register(b1)
 {
 	float3 Camera;
-	float time;
+	float heightmapmul;
 };
 
 struct ConstantOutputType
@@ -118,7 +118,7 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	output.normal = normalize(output.normal);
 
 	float h = texture0.SampleLevel(sampler0, UV, 0).r;
-	vertexPosition.y += (15.0f * h);// *float3(Normal);
+	vertexPosition.y += (heightmapmul * h);// *float3(Normal);
 
 	// Calculate the position of the new vertex against the world, view, and projection matrices.
 	output.position = mul(float4(vertexPosition, 1.0f), worldMatrix);

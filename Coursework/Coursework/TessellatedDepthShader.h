@@ -22,7 +22,7 @@ private:
 	struct cameraBufferType
 	{
 		XMFLOAT3 camera;
-		float time;
+		float heightMapMul;
 	};
 
 public:
@@ -30,7 +30,7 @@ public:
 	TessellationDepthShader(ID3D11Device* device, HWND hwnd);
 	~TessellationDepthShader();
 
-	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, Light* light);
+	void setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, Light* light, float heightmapmul);
 
 private:
 	void initShader(const wchar_t* vsFilename, const wchar_t* psFilename);

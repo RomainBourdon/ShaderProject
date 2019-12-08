@@ -127,7 +127,8 @@ void TessellationShader::initShader(const wchar_t* vsFilename, const wchar_t* hs
 }
 
 
-void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time, XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, Light* light, Light* light1, Light* light2, Light* light3, ID3D11ShaderResourceView* shadowmap)
+void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX& worldMatrix, const XMMATRIX& viewMatrix, const XMMATRIX& projectionMatrix, float time,
+	XMFLOAT3 camera, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* texture2, Light* light, Light* light1, Light* light2, Light* light3, ID3D11ShaderResourceView* shadowmap, float heightmapmul)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -155,12 +156,11 @@ void TessellationShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	cameraBufferType* facPtr;
 	deviceContext->Map(cameraBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	facPtr = (cameraBufferType*)mappedResource.pData;
-	facPtr->time = time;
+	facPtr->heightMapMulti = heightmapmul;
 	facPtr->camera = camera;
 	deviceContext->Unmap(cameraBuffer, 0);
 	deviceContext->HSSetConstantBuffers(0, 1, &cameraBuffer);
 	deviceContext->DSSetConstantBuffers(1, 1, &cameraBuffer);
-	deviceContext->VSSetConstantBuffers(1, 1, &cameraBuffer);
 
 	//Additional
 	// Send light data to pixel shader
