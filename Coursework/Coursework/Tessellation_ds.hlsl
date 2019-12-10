@@ -130,7 +130,6 @@ OutputType main(ConstantOutputType input, float2 uvwCoord : SV_DomainLocation, c
 	output.lightViewPos = mul(output.lightViewPos, lightViewMatrix);
 	output.lightViewPos = mul(output.lightViewPos, lightProjectionMatrix);
 
-	//output.normal = Normal;
 	output.tex = UV;
 
 	output.depthPosition = output.position;
